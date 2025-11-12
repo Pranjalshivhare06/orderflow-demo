@@ -221,6 +221,11 @@ router.post('/', async (req, res) => {
     const order = new Order(req.body);
     await order.save();
     res.status(201).json(order);
+//     res.status(201).json({ 
+//   message: 'Order placed successfully', 
+//   order 
+// });
+
   } catch (error) {
     console.error('Error creating order:', error);
     res.status(400).json({ message: error.message });
@@ -259,4 +264,128 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// Get today's order statistics
+// router.get('/stats/today', async (req, res) => {
+//   try {
+//     // Get today's date range
+//     const today = new Date();
+//     today.setHours(0, 0, 0, 0);
+//     const tomorrow = new Date(today);
+//     tomorrow.setDate(tomorrow.getDate() + 1);
+
+//     // Get all orders from today
+//     const todayOrders = await Order.find({
+//       createdAt: {
+//         $gte: today,
+//         $lt: tomorrow
+//       }
+//     });
+
+//     // Calculate statistics
+//     const totalOrders = todayOrders.length;
+    
+//     const pendingOrders = todayOrders.filter(order => 
+//       ['pending', 'confirmed', 'preparing'].includes(order.status)
+//     ).length;
+    
+//     const totalRevenue = todayOrders
+//       .filter(order => order.status !== 'cancelled')
+//       .reduce((total, order) => total + (order.finalTotal || order.totalAmount || 0), 0);
+
+//     res.json({
+//       totalOrders,
+//       pendingOrders,
+//       totalRevenue,
+//       date: today.toISOString().split('T')[0]
+//     });
+
+//   } catch (error) {
+//     console.error('Error fetching today stats:', error);
+//     res.status(500).json({ 
+//       message: 'Error fetching statistics',
+//       error: error.message 
+//     });
+//   }
+// });
+
+// GET /orders/stats/today
+router.get('/stats/today', async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const todayOrders = await Order.find({
+      createdAt: { $gte: today, $lt: tomorrow }
+    });
+
+    const totalOrders = todayOrders.length;
+    const pendingOrders = todayOrders.filter(order => order.status === 'pending').length;
+    const totalRevenue = todayOrders.reduce((sum, order) => sum + (order.finalTotal || 0), 0);
+
+    res.json({ totalOrders, pendingOrders, totalRevenue });
+  } catch (error) {
+    console.error('Error fetching today’s stats:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+// Get comprehensive statistics
+router.get('/stats/overview', async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Today's stats
+    const todayOrders = await Order.find({
+      createdAt: { $gte: today, $lt: tomorrow }
+    });
+
+    // All time stats
+    const allOrders = await Order.find({});
+    
+    // Status counts
+    const statusCounts = {
+      pending: allOrders.filter(order => order.status === 'pending').length,
+      confirmed: allOrders.filter(order => order.status === 'confirmed').length,
+      preparing: allOrders.filter(order => order.status === 'preparing').length,
+      ready: allOrders.filter(order => order.status === 'ready').length,
+      served: allOrders.filter(order => order.status === 'served').length,
+      cancelled: allOrders.filter(order => order.status === 'cancelled').length
+    };
+
+    const stats = {
+      today: {
+        totalOrders: todayOrders.length,
+        pendingOrders: todayOrders.filter(order => 
+          ['pending', 'confirmed', 'preparing'].includes(order.status)
+        ).length,
+        revenue: todayOrders
+          .filter(order => order.status !== 'cancelled')
+          .reduce((total, order) => total + (order.finalTotal || order.totalAmount || 0), 0)
+      },
+      allTime: {
+        totalOrders: allOrders.length,
+        totalRevenue: allOrders
+          .filter(order => order.status !== 'cancelled')
+          .reduce((total, order) => total + (order.finalTotal || order.totalAmount || 0), 0),
+        averageOrderValue: allOrders.length > 0 ? 
+          allOrders.reduce((total, order) => total + (order.finalTotal || order.totalAmount || 0), 0) / allOrders.length : 0
+      },
+      statusCounts
+    };
+
+    res.json(stats);
+
+  } catch (error) {
+    console.error('Error fetching overview stats:', error);
+    res.status(500).json({ message: 'Error fetching statistics' });
+  }
+});
+
 module.exports = router;
+

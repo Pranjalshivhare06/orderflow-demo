@@ -295,6 +295,8 @@ const placeOrder = async () => {
       mobileNumber: customerInfo.mobileNumber,
       items: cart.map(item => ({
         menuItem: generateMongoObjectId(), // Proper 24-char ObjectId
+
+        name: item.name,
         quantity: item.quantity,
         price: item.price
       })),
@@ -307,7 +309,9 @@ const placeOrder = async () => {
     
     console.log('✅ Order response:', response.data);
     
-    alert(`Order placed successfully! Your order number is: ${response.data.order.orderNumber}`);
+    // alert(`Order placed successfully! Your order number is: ${response.data.order.orderNumber}`);
+    alert(`✅ Order placed successfully! Your order number is: ${response.data.orderNumber || response.data.order?.orderNumber}`);
+
     setCart([]);
     setShowCart(false);
     

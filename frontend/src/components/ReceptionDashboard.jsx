@@ -227,39 +227,165 @@ const ReceptionDashboard = () => {
     }
   }
 
-  const fetchStats = async () => {
+  // const fetchStats = async () => {
+  //   try {
+  //     const response = await axios.get(`${API_BASE_URL}/orders/stats/today`)
+  //     setStats(response.data)
+  //     setStatsError(false)
+  //   } catch (error) {
+  //     console.error('Error fetching stats:', error)
+  //     setStatsError(true)
+  //     // Set default stats if API fails
+  //     setStats({
+  //       totalOrders: orders.length,
+  //       pendingOrders: orders.filter(order => 
+  //         ['pending', 'confirmed', 'preparing'].includes(order.status)
+  //       ).length,
+  //       totalRevenue: orders
+  //         .filter(order => order.status !== 'cancelled')
+  //         .reduce((total, order) => total + order.totalAmount, 0)
+  //     })
+  //   }
+  // }
+
+  // Updated fetchStats function
+const fetchStats = async () => {
+  try {
+    console.log('📊 Fetching statistics...');
+    
+    // Try the new stats endpoint first
+    const response = await axios.get(`${API_BASE_URL}/orders/stats/today`);
+    console.log('📊 Stats response:', response.data);
+    
+    setStats({
+      totalOrders: response.data.totalOrders || 0,
+      pendingOrders: response.data.pendingOrders || 0,
+      totalRevenue: response.data.totalRevenue || 0
+    });
+    setStatsError(false);
+    
+  } catch (error) {
+    console.error('❌ Error fetching stats from API:', error);
+    
+    // Fallback: Calculate stats from local orders data
     try {
-      const response = await axios.get(`${API_BASE_URL}/orders/stats/today`)
-      setStats(response.data)
-      setStatsError(false)
-    } catch (error) {
-      console.error('Error fetching stats:', error)
-      setStatsError(true)
-      // Set default stats if API fails
+      console.log('🔄 Using fallback stats calculation from local orders...');
+      
+      const totalOrders = orders.length;
+      const pendingOrders = orders.filter(order => 
+        ['pending', 'confirmed', 'preparing'].includes(order.status)
+      ).length;
+      
+      // Use finalTotal if available, otherwise use totalAmount
+      const totalRevenue = orders
+        .filter(order => order.status !== 'cancelled')
+        .reduce((total, order) => {
+          const orderTotal = order.finalTotal || order.totalAmount || 0;
+          return total + orderTotal;
+        }, 0);
+
+      console.log('📊 Fallback stats calculated:', {
+        totalOrders,
+        pendingOrders,
+        totalRevenue
+      });
+
       setStats({
-        totalOrders: orders.length,
-        pendingOrders: orders.filter(order => 
-          ['pending', 'confirmed', 'preparing'].includes(order.status)
-        ).length,
-        totalRevenue: orders
-          .filter(order => order.status !== 'cancelled')
-          .reduce((total, order) => total + order.totalAmount, 0)
-      })
+        totalOrders,
+        pendingOrders,
+        totalRevenue
+      });
+      setStatsError(true); // Mark as fallback mode
+      
+    } catch (fallbackError) {
+      console.error('❌ Fallback stats calculation failed:', fallbackError);
+      // Ultimate fallback
+      setStats({
+        totalOrders: 0,
+        pendingOrders: 0,
+        totalRevenue: 0
+      });
+      setStatsError(true);
     }
+  }
+};
+
+// Update the useEffect to include orders dependency
+useEffect(() => {
+  if (!isAuthenticated) return;
+
+  let socket;
+  try {
+    fetchOrders().then(() => {
+      // Fetch stats after orders are loaded
+      fetchStats();
+    });
+    
+    socket = io('https://orderflow-backend-v964.onrender.com');
+    socket.emit('join-reception');
+    
+    socket.on('new-order', (newOrder) => {
+      console.log('🆕 New order received:', newOrder);
+      setOrders(prev => [newOrder, ...prev]);
+      
+      // Update stats when new order arrives
+      setTimeout(() => {
+        fetchStats();
+      }, 100);
+      
+      // Show notification for new order
+      showNewOrderNotification(newOrder);
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+    });
+
+  } catch (error) {
+    console.error('Error setting up socket:', error);
   }
 
-  const updateOrderStatus = async (orderId, newStatus) => {
-    try {
-      await axios.patch(`${API_BASE_URL}/orders/${orderId}/status`, {
-        status: newStatus
-      })
-      fetchOrders()
-      fetchStats()
-    } catch (error) {
-      console.error('Error updating order status:', error)
-      alert('Error updating order status. Please try again.')
+  return () => {
+    if (socket) {
+      socket.disconnect();
     }
+    if (notificationTimeoutRef.current) {
+      clearTimeout(notificationTimeoutRef.current);
+    }
+  };
+}, [isAuthenticated]);
+
+// Update the updateOrderStatus function to refresh stats
+const updateOrderStatus = async (orderId, newStatus) => {
+  try {
+    await axios.patch(`${API_BASE_URL}/orders/${orderId}/status`, {
+      status: newStatus
+    });
+    
+    // Refresh both orders and stats
+    await fetchOrders();
+    setTimeout(() => {
+      fetchStats();
+    }, 100);
+    
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    alert('Error updating order status. Please try again.');
   }
+};
+
+  // const updateOrderStatus = async (orderId, newStatus) => {
+  //   try {
+  //     await axios.patch(`${API_BASE_URL}/orders/${orderId}/status`, {
+  //       status: newStatus
+  //     })
+  //     fetchOrders()
+  //     fetchStats()
+  //   } catch (error) {
+  //     console.error('Error updating order status:', error)
+  //     alert('Error updating order status. Please try again.')
+  //   }
+  // }
 
   const getStatusColor = (status) => {
     const colors = {
@@ -355,6 +481,7 @@ const ReceptionDashboard = () => {
         <source src="/notification-sound.wav" type="audio/wav" />
         Your browser does not support the audio element.
       </audio>
+      
 
       {/* Audio Permission Indicator */}
       {!audioPermissionGranted && (
@@ -416,6 +543,7 @@ const ReceptionDashboard = () => {
                 Logout
               </button>
             </div>
+            <div classname="list">
             <Link to="/admin/tables" className="btn-primary">
               Manage Tables
             </Link>
@@ -425,14 +553,15 @@ const ReceptionDashboard = () => {
               <Link to="/inventory" className="btn-primary">
               Manage Inventory
               </Link>
-              <Link to="/admin/bill-printing" className="btn-primary">
+              {/* <Link to="/admin/bill-printing" className="btn-primary">
               Bill Print 
-              </Link>
+              </Link> */}
               {/* <button>
             </button> */}
-            <button onClick={fetchOrders} className="btn-secondary" disabled={loading}>
+            {/* <button onClick={fetchOrders} className="btn-secondary" disabled={loading}>
               {loading ? 'Refreshing...' : 'Refresh'}
-            </button>
+            </button> */}
+            </div>
           </div>
         </div>
         
@@ -486,20 +615,20 @@ const ReceptionDashboard = () => {
             ) : (
               orders.map(order => (
                 <div key={order._id} className="order-card">
-                  <div className="order-header">
+                  {/* <div className="order-header"> */}
                     <div className="order-title">
                       <h3>Order #{order.orderNumber}</h3>
                       <span className="order-time">
                         {new Date(order.createdAt || order.orderTime).toLocaleTimeString()}
                       </span>
                     </div>
-                    <span 
+                    {/* <span 
                       className="status-badge"
                       style={{ backgroundColor: getStatusColor(order.status) }}
                     >
                       {getStatusText(order.status)}
-                    </span>
-                  </div>
+                    </span> */}
+                  {/* </div> */}
                   
                   <div className="order-details">
                     <div className="detail-row">
@@ -560,3 +689,5 @@ const ReceptionDashboard = () => {
 }
 
 export default ReceptionDashboard
+
+

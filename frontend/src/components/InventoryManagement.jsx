@@ -206,7 +206,6 @@ const InventoryManagement = () => {
             ← Back to Dashboard
           </Link>
           <h1>Inventory Management</h1>
-          <p>Manage your restaurant inventory and track stock levels</p>
         </div>
       </header>
 
@@ -225,10 +224,10 @@ const InventoryManagement = () => {
             <h3>Out of Stock</h3>
             <p className="stat-number">{inventoryStats.outOfStockItems}</p>
           </div>
-          <div className="stat-card value">
+          {/* <div className="stat-card value">
             <h3>Total Value</h3>
             <p className="stat-number">${inventoryStats.totalValue.toFixed(2)}</p>
-          </div>
+          </div> */}
         </div>
 
         {/* Search and Filters */}
@@ -437,20 +436,20 @@ const InventoryManagement = () => {
                         <td>{item.category}</td>
                         <td>
                           <div className="quantity-controls">
-                            <button 
+                            {/* <button 
                               onClick={() => handleStockUpdate(item._id, item.quantity - 1)}
                               disabled={item.quantity <= 0}
                               className="qty-btn"
                             >
                               -
-                            </button>
+                            </button> */}
                             <span className="quantity-display">{item.quantity}</span>
-                            <button 
+                            {/* <button 
                               onClick={() => handleStockUpdate(item._id, item.quantity + 1)}
                               className="qty-btn"
                             >
                               +
-                            </button>
+                            </button> */}
                           </div>
                         </td>
                         <td>{item.unit}</td>
@@ -480,7 +479,7 @@ const InventoryManagement = () => {
                               className="btn-delete"
                               title="Delete"
                             >
-                              🗑️
+                              ❌
                             </button>
                           </div>
                         </td>
