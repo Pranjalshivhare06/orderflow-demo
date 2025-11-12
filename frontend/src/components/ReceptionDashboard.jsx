@@ -425,6 +425,9 @@ const ReceptionDashboard = () => {
               <Link to="/inventory" className="btn-primary">
               Manage Inventory
               </Link>
+              <Link to="/admin/bill-printing" className="btn-primary">
+              Bill Print 
+              </Link>
               {/* <button>
             </button> */}
             <button onClick={fetchOrders} className="btn-secondary" disabled={loading}>
