@@ -94,7 +94,25 @@ const ReceptionDashboard = () => {
       // You can show a visual indicator that sound is muted
     }
   }
+ // Add this temporary debug function in your component
+const debugOrderData = (order) => {
+  console.log('📦 Full Order Data:', order);
+  console.log('🔍 Items Structure:', order.items);
+  if (order.items && order.items.length > 0) {
+    console.log('📝 First Item Details:', order.items[0]);
+    console.log('🏷️ Menu Item Structure:', order.items[0].menuItem);
+  }
+};
 
+// In your orders.map, add this temporarily:
+{orders.map(order => {
+  debugOrderData(order); // Remove this after debugging
+  return (
+    <div key={order._id} className="order-card">
+      // ... rest of your code
+    </div>
+  );
+})} 
   // Show new order notification
   const showNewOrderNotification = (order) => {
     // Clear any existing timeout
@@ -138,10 +156,11 @@ const ReceptionDashboard = () => {
   useEffect(() => {
     if (!isAuthenticated) return
 
-    let socket
+    let socket;
     try {
-      fetchOrders()
-      fetchStats()
+      fetchOrders().then(() => {
+        fetchStats();
+      });
       
       socket = io('https://orderflow-backend-v964.onrender.com')
       socket.emit('join-reception')
@@ -149,11 +168,23 @@ const ReceptionDashboard = () => {
       socket.on('new-order', (newOrder) => {
         console.log('🆕 New order received:', newOrder)
         setOrders(prev => [newOrder, ...prev])
-        fetchStats()
-        
+        // fetchStats()
+        setTimeout(() => fetchStats(), 100);
+
         // Show notification for new order
         showNewOrderNotification(newOrder)
-      })
+      });
+
+       // Add this listener for status updates
+    socket.on('order-status-updated', (updatedOrder) => {
+      console.log('🔄 Order status updated:', updatedOrder);
+      setOrders(prevOrders => 
+        prevOrders.map(order => 
+          order._id === updatedOrder._id ? updatedOrder : order
+        )
+      );
+      setTimeout(() => fetchStats(), 100);
+    });
 
       socket.on('connect_error', (error) => {
         console.error('Socket connection error:', error)
@@ -227,27 +258,7 @@ const ReceptionDashboard = () => {
     }
   }
 
-  // const fetchStats = async () => {
-  //   try {
-  //     const response = await axios.get(`${API_BASE_URL}/orders/stats/today`)
-  //     setStats(response.data)
-  //     setStatsError(false)
-  //   } catch (error) {
-  //     console.error('Error fetching stats:', error)
-  //     setStatsError(true)
-  //     // Set default stats if API fails
-  //     setStats({
-  //       totalOrders: orders.length,
-  //       pendingOrders: orders.filter(order => 
-  //         ['pending', 'confirmed', 'preparing'].includes(order.status)
-  //       ).length,
-  //       totalRevenue: orders
-  //         .filter(order => order.status !== 'cancelled')
-  //         .reduce((total, order) => total + order.totalAmount, 0)
-  //     })
-  //   }
-  // }
-
+ 
   // Updated fetchStats function
 const fetchStats = async () => {
   try {
@@ -355,37 +366,311 @@ useEffect(() => {
   };
 }, [isAuthenticated]);
 
-// Update the updateOrderStatus function to refresh stats
-const updateOrderStatus = async (orderId, newStatus) => {
-  try {
-    await axios.patch(`${API_BASE_URL}/orders/${orderId}/status`, {
-      status: newStatus
+// Add this temporary debug function
+const debugOrders = () => {
+  console.log('🔍 CURRENT ORDERS DEBUG:');
+  orders.forEach((order, index) => {
+    console.log(`Order ${index + 1}:`, {
+      _id: order._id,
+      orderNumber: order.orderNumber,
+      status: order.status,
+      idLength: order._id?.length,
+      isValidObjectId: order._id && /^[0-9a-fA-F]{24}$/.test(order._id)
     });
+  });
+};
+
+// Call it when component mounts or when orders change
+useEffect(() => {
+  if (orders.length > 0) {
+    debugOrders();
+  }
+}, [orders]);
+
+// Update the updateOrderStatus function to refresh stats
+// const updateOrderStatus = async (orderId, newStatus) => {
+//   try {
+//     await axios.patch(`${API_BASE_URL}/orders/${orderId}/status`, {
+//       status: newStatus
+//     });
     
-    // Refresh both orders and stats
-    await fetchOrders();
-    setTimeout(() => {
-      fetchStats();
-    }, 100);
+//     // Refresh both orders and stats
+//     await fetchOrders();
+//     setTimeout(() => {
+//       fetchStats();
+//     }, 100);
+    
+//   } catch (error) {
+//     console.error('Error updating order status:', error);
+//     alert('Error updating order status. Please try again.');
+//   }
+// };
+
+// const updateOrderStatus = async (orderId, newStatus) => {
+//   try {
+//     console.log('🔄 Updating order status:', { orderId, newStatus });
+    
+//     const response = await axios.patch(`${API_BASE_URL}/orders/${orderId}/status`, {
+//       status: newStatus
+//     });
+    
+//     console.log('✅ Status update response:', response.data);
+    
+//     // Update local state immediately for better UX
+//     setOrders(prevOrders => 
+//       prevOrders.map(order => 
+//         order._id === orderId 
+//           ? { ...order, status: newStatus }
+//           : order
+//       )
+//     );
+    
+//     // Refresh stats
+//     setTimeout(() => {
+//       fetchStats();
+//     }, 100);
+    
+//   } catch (error) {
+//     console.error('❌ Error updating order status:', error);
+    
+//     // Show specific error message
+//     if (error.response) {
+//       alert(`Error: ${error.response.data.message || 'Failed to update status'}`);
+//     } else {
+//       alert('Error updating order status. Please check your connection and try again.');
+//     }
+    
+//     // Revert to original state on error
+//     fetchOrders();
+//   }
+// };
+
+// const updateOrderStatus = async (orderId, newStatus) => {
+//   try {
+//     console.log('🔄 Updating order status:', { orderId, newStatus });
+    
+//     // Map frontend status to backend status if needed
+//     const statusMap = {
+//       'ready': 'completed' // Map 'ready' to 'completed' if backend doesn't have 'ready'
+//     };
+    
+//     const backendStatus = statusMap[newStatus] || newStatus;
+    
+//     const response = await axios.patch(`${API_BASE_URL}/orders/${orderId}/status`, {
+//       status: backendStatus
+//     });
+    
+//     console.log('✅ Status update response:', response.data);
+    
+//     // Update local state immediately
+//     setOrders(prevOrders => 
+//       prevOrders.map(order => 
+//         order._id === orderId 
+//           ? { ...order, status: newStatus } // Keep frontend status for UI
+//           : order
+//       )
+//     );
+    
+//     // Refresh stats
+//     setTimeout(() => {
+//       fetchStats();
+//     }, 100);
+    
+//   } catch (error) {
+//     console.error('❌ Error updating order status:', error);
+    
+//     // Show specific error message
+//     if (error.response?.data?.message) {
+//       alert(`Error: ${error.response.data.message}`);
+//     } else {
+//       alert('Error updating order status. Please try again.');
+//     }
+    
+//     // Refresh orders to get correct state
+//     fetchOrders();
+//   }
+// };
+// Add this function to your ReceptionDashboard component
+// const updateOrderStatus = async (orderId, newStatus) => {
+//   try {
+//     console.log('🔄 Updating order status:', { 
+//       orderId, 
+//       newStatus,
+//       idType: typeof orderId,
+//       idLength: orderId?.length 
+//     });
+
+//     // Validate that we have a proper MongoDB ObjectId (24 characters)
+//     if (!orderId || orderId.length !== 24) {
+//       console.error('❌ Invalid order ID format:', orderId);
+//       alert('Invalid order ID. Please refresh the page and try again.');
+//       return;
+//     }
+
+//     // Try PATCH endpoint first
+//     try {
+//       const response = await axios.patch(`${API_BASE_URL}/orders/${orderId}/status`, {
+//         status: newStatus
+//       });
+      
+//       console.log('✅ Status update successful:', response.data);
+      
+//       // Update local state immediately
+//       setOrders(prevOrders => 
+//         prevOrders.map(order => 
+//           order._id === orderId 
+//             ? { ...order, status: newStatus }
+//             : order
+//         )
+//       );
+      
+//     } catch (patchError) {
+//       // If PATCH fails, try PUT endpoint
+//       if (patchError.response?.status === 404) {
+//         console.log('🔄 PATCH failed, trying PUT endpoint...');
+        
+//         const putResponse = await axios.put(`${API_BASE_URL}/orders/${orderId}/status`, {
+//           status: newStatus
+//         });
+        
+//         console.log('✅ PUT Status update successful:', putResponse.data);
+        
+//         // Update local state
+//         setOrders(prevOrders => 
+//           prevOrders.map(order => 
+//             order._id === orderId 
+//               ? { ...order, status: newStatus }
+//               : order
+//           )
+//         );
+//       } else {
+//         throw patchError; // Re-throw if it's not a 404 error
+//       }
+//     }
+    
+//     // Refresh stats
+//     setTimeout(() => {
+//       fetchStats();
+//     }, 100);
+    
+//   } catch (error) {
+//     console.error('❌ Error updating order status:', error);
+    
+//     if (error.response?.status === 404) {
+//       alert('Order not found. The order may have been deleted or the ID is incorrect.');
+//     } else if (error.response?.data?.message) {
+//       alert(`Error: ${error.response.data.message}`);
+//     } else {
+//       alert('Error updating order status. Please try again.');
+//     }
+    
+//     // Refresh to get correct data
+//     fetchOrders();
+//   }
+// };
+// const updateOrderStatus = async (orderId, newStatus) => {
+//   try {
+//     console.log('🔄 Updating order status:', { orderId, newStatus });
+
+//     // Use the new order-number endpoint
+//     const response = await axios.patch(`${API_BASE_URL}/orders/order-number/${orderId}/status`, {
+//       status: newStatus
+//     });
+    
+//     console.log('✅ Status update successful:', response.data);
+    
+//     // Update local state
+//     setOrders(prevOrders => 
+//       prevOrders.map(order => 
+//         order.orderNumber === orderId 
+//           ? { ...order, status: newStatus }
+//           : order
+//       )
+//     );
+    
+//     setTimeout(() => fetchStats(), 100);
+    
+//   } catch (error) {
+//     console.error('❌ Error updating order status:', error);
+//     alert('Error updating order status. Please try again.');
+//     fetchOrders();
+//   }
+// };
+// Updated updateOrderStatus function with multiple fallback options
+const updateOrderStatus = async (orderNumber, newStatus) => {
+  try {
+    console.log('🔄 Updating order status:', { orderNumber, newStatus });
+    setUpdatingOrders(prev => new Set(prev).add(orderNumber));
+
+    // First, we need to find the actual order ID from the order number
+    const order = orders.find(o => o.orderNumber === orderNumber);
+    
+    if (!order) {
+      alert('Order not found in local data. Please refresh the page.');
+      return;
+    }
+
+    const orderId = order._id;
+    console.log('🔍 Found order ID:', orderId, 'for order number:', orderNumber);
+
+    let response;
+
+    // Try Option 1: PATCH with order ID (existing route)
+    try {
+      console.log('🔄 Trying PATCH with order ID...');
+      response = await axios.patch(`${API_BASE_URL}/orders/${orderId}/status`, {
+        status: newStatus
+      });
+      console.log('✅ PATCH successful:', response.data);
+    } catch (patchError) {
+      // If PATCH fails, try Option 2: PUT with order ID (existing route)
+      if (patchError.response?.status === 404) {
+        console.log('🔄 PATCH failed, trying PUT with order ID...');
+        response = await axios.put(`${API_BASE_URL}/orders/${orderId}/status`, {
+          status: newStatus
+        });
+        console.log('✅ PUT successful:', response.data);
+      } else {
+        throw patchError;
+      }
+    }
+
+    // Update local state
+    setOrders(prevOrders => 
+      prevOrders.map(order => 
+        order.orderNumber === orderNumber 
+          ? { ...order, status: newStatus }
+          : order
+      )
+    );
+    
+    setTimeout(() => fetchStats(), 100);
     
   } catch (error) {
-    console.error('Error updating order status:', error);
-    alert('Error updating order status. Please try again.');
+    console.error('❌ Error updating order status:', error);
+    
+    if (error.response?.status === 404) {
+      alert('Order not found on server. The order may have been deleted.');
+    } else if (error.response?.data?.message) {
+      alert(`Error: ${error.response.data.message}`);
+    } else {
+      alert('Error updating order status. Please try again.');
+    }
+    
+    // Refresh to get current data
+    fetchOrders();
+  } finally {
+    setUpdatingOrders(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(orderNumber);
+      return newSet;
+    });
   }
 };
 
-  // const updateOrderStatus = async (orderId, newStatus) => {
-  //   try {
-  //     await axios.patch(`${API_BASE_URL}/orders/${orderId}/status`, {
-  //       status: newStatus
-  //     })
-  //     fetchOrders()
-  //     fetchStats()
-  //   } catch (error) {
-  //     console.error('Error updating order status:', error)
-  //     alert('Error updating order status. Please try again.')
-  //   }
-  // }
+// And in your select element, use orderNumber:
+
+  {/* options */}
 
   const getStatusColor = (status) => {
     const colors = {
@@ -553,6 +838,21 @@ const updateOrderStatus = async (orderId, newStatus) => {
               <Link to="/inventory" className="btn-primary">
               Manage Inventory
               </Link>
+              // Add this button in your header or somewhere visible
+<button 
+  onClick={debugOrders}
+  style={{
+    margin: '10px', 
+    padding: '8px 16px', 
+    background: '#ff6b6b', 
+    color: 'white', 
+    border: 'none', 
+    borderRadius: '4px',
+    fontSize: '12px'
+  }}
+>
+  Debug Orders
+</button>
               {/* <Link to="/admin/bill-printing" className="btn-primary">
               Bill Print 
               </Link> */}
@@ -622,13 +922,13 @@ const updateOrderStatus = async (orderId, newStatus) => {
                         {new Date(order.createdAt || order.orderTime).toLocaleTimeString()}
                       </span>
                     </div>
-                    {/* <span 
+                    <span 
                       className="status-badge"
                       style={{ backgroundColor: getStatusColor(order.status) }}
                     >
                       {getStatusText(order.status)}
-                    </span> */}
-                  {/* </div> */}
+                    </span>
+                  {/* </div>  */}
                   
                   <div className="order-details">
                     <div className="detail-row">
@@ -647,7 +947,7 @@ const updateOrderStatus = async (orderId, newStatus) => {
 
                   <div className="order-items">
                     <h4>Order Items:</h4>
-                    {order.items && order.items.map((item, index) => (
+                    {/* {order.items && order.items.map((item, index) => (
                       <div key={index} className="order-item">
                         <span className="item-name">
                           {item.quantity}x {item.menuItem?.name || 'Item'}
@@ -656,7 +956,28 @@ const updateOrderStatus = async (orderId, newStatus) => {
                           ₹{item.price * item.quantity}
                         </span>
                       </div>
-                    ))}
+                    ))} */}
+                     {order.items && order.items.map((item, index) => {
+    // Try different possible property names for the item name
+    const itemName = item.menuItem?.name || 
+                    item.name || 
+                    item.menuItemName || 
+                    'Item';
+    
+    const itemPrice = item.price || item.menuItem?.price || 0;
+    const itemQuantity = item.quantity || 1;
+
+    return (
+      <div key={index} className="order-item">
+        <span className="item-name">
+          {itemQuantity}x {itemName}
+        </span>
+        <span className="item-price">
+          ₹{itemPrice * itemQuantity}
+        </span>
+      </div>
+    );
+  })}
                   </div>
 
                   <div className="order-total">
@@ -667,8 +988,11 @@ const updateOrderStatus = async (orderId, newStatus) => {
                     <label>Update Status:</label>
                     <select
                       value={order.status}
-                      onChange={(e) => updateOrderStatus(order._id, e.target.value)}
-                      className="status-select"
+                      // onChange={(e) => updateOrderStatus(order._id, e.target.value)}
+                        onChange={(e) => updateOrderStatus(order.orderNumber, e.target.value)}
+
+                      className="status-select" 
+                      //disabled={updatingOrders.has(order._id)}
                     >
                       <option value="pending">Pending</option>
                       <option value="confirmed">Confirmed</option>

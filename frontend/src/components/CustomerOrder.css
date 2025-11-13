@@ -7,20 +7,33 @@ body {
   padding: 0;
 }
 
-/* ---------- Header ---------- */
+/* ---------- Header ---------- 
 .order-header {
-  position: fixed;         /* stays fixed at top */
+  position: fixed;       
   top: 0;
   left: 0;
   width: 100%;
-  z-index: 1000;           /* ensures it stays above everything else */
+  z-index: 1000;          
   background: linear-gradient(135deg, #cfe7d4, #b7e1a1);
   color: #2e2e2e;
   padding: 1rem 2rem;
   border-radius: 0 0 10px 10px;
   box-shadow: 0 4px 10px rgba(142, 164, 120, 0.25);
 }
+*/
 
+.order-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background: linear-gradient(135deg, #cfe7d4, #b7e1a1);
+  color: #2e2e2e;
+  padding: 1rem 2rem;
+  border-radius: 0 0 10px 10px;
+  box-shadow: 0 4px 10px rgba(142, 164, 120, 0.25);
+}
 
 
 
@@ -78,14 +91,19 @@ body {
 
 /* ---------- Menu Section ---------- */
 .order-container {
-  /* padding: 1.5rem 2rem; */
-    padding: 6rem 2rem 1.5rem; /* extra top padding to make space for header */
-
+  padding-top: 6rem; /* adjust based on your header height */
+  padding-bottom: 2rem;
+  overflow-y: auto;
+  height: calc(100vh - 6rem); /* scrollable area below header */
 }
 
 .section-header {
-  text-align: center;
-  margin-bottom: 1rem;
+  position: sticky;
+  top: 4.5rem; /* just below the header */
+  background-color: #f9faf6; /* same as page background */
+  z-index: 900;
+  padding: 0.5rem 0;
+  box-shadow: 0 2px 6px rgba(180, 200, 170, 0.1);
 }
 
 .section-header h2 {
@@ -97,11 +115,14 @@ body {
 /* Category Tabs */
 .category-tabs {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  justify-content: flex-start;
   gap: 0.4rem;
+  padding: 0.5rem 0;
 }
-
+/* 
 .category-tabs button {
   background: #edf6eb;
   border: 1px solid #c8dec1;
@@ -111,7 +132,9 @@ body {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-}
+} */
+
+
 
 .category-tabs button.active {
   background: #b7e1a1;

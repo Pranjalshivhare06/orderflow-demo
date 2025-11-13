@@ -1,4 +1,4 @@
-/* 🌐 General Layout */
+🌐 General Layout
 .reception-dashboard {
   font-family: 'Poppins', sans-serif;
   background: #f8faff;
@@ -158,12 +158,12 @@
   box-shadow: 0 4px 10px rgba(0, 60, 255, 0.12);
 }
 
-.order-header {
+/* .order-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
-}
+} */
 
 .order-title h3 {
   color: #004aad;

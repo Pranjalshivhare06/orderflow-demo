@@ -294,7 +294,7 @@ const placeOrder = async () => {
       customerName: customerInfo.name,
       mobileNumber: customerInfo.mobileNumber,
       items: cart.map(item => ({
-        menuItem: generateMongoObjectId(), // Proper 24-char ObjectId
+        // menuItem: generateMongoObjectId(), // Proper 24-char ObjectId
 
         name: item.name,
         quantity: item.quantity,
@@ -330,18 +330,18 @@ const placeOrder = async () => {
 }
 
 // Generate valid 24-character MongoDB ObjectId
-const generateMongoObjectId = () => {
-  const timestamp = Math.floor(new Date().getTime() / 1000).toString(16).padStart(8, '0');
-  const random = Array(16)
-    .fill(0)
-    .map(() => Math.floor(Math.random() * 16).toString(16))
-    .join('');
-  return timestamp + random;
-}
+// const generateMongoObjectId = () => {
+//   const timestamp = Math.floor(new Date().getTime() / 1000).toString(16).padStart(8, '0');
+//   const random = Array(16)
+//     .fill(0)
+//     .map(() => Math.floor(Math.random() * 16).toString(16))
+//     .join('');
+//   return timestamp + random;
+// }
 
 // Test if the function works
-console.log('🧪 Test ObjectId:', generateMongoObjectId());
-console.log('🧪 Length:', generateMongoObjectId().length); // Should be 24
+// console.log('🧪 Test ObjectId:', generateMongoObjectId());
+// console.log('🧪 Length:', generateMongoObjectId().length); // Should be 24
 
 // Helper function to generate valid MongoDB-like ObjectId strings
 const generateObjectId = () => {
@@ -618,3 +618,5 @@ const generateObjectId = () => {
 }
 
 export default CustomerOrder
+
+
