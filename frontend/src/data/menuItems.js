@@ -292,6 +292,30 @@ const menuItems = [
     preparationTime: 6,
     isVegetarian: true,
     isAvailable: true
+  },
+  {
+    id: 15,
+    name: "Ayushman Special",
+    category: "Cold Shakes",
+    price: 149,
+    description: "Chilled coffee blended with ice cream and chocolate",
+    image: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=500&h=400&fit=crop",
+    ingredients: ["Coffee", "Milk", "Ice Cream", "Chocolate", "Ice"],
+    preparationTime: 6,
+    isVegetarian: true,
+    isAvailable: true
+  },
+  {
+    id: 15,
+    name: "Pranjal Special",
+    category: "chilled",
+    price: 149,
+    description: "Chilled coffee blended with ice cream and chocolate",
+    image: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=500&h=400&fit=crop",
+    ingredients: ["Coffee", "Milk", "Ice Cream", "Chocolate", "Ice"],
+    preparationTime: 6,
+    isVegetarian: true,
+    isAvailable: true
   }
 ];
 

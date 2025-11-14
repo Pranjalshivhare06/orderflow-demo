@@ -1,15 +1,15 @@
 
 
 //2
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import axios from 'axios'
 // import menuItems from './menuItems'
 import menuItems from '../data/menuItems' // Import your hardcoded menu items
 import './CustomerOrder.css'
-
+import background from '../assets/barista.jpg';
 const API_BASE_URL = 'https://orderflow-backend-v964.onrender.com/api'
-
+import logo from '../assets/logo.png';
 const CustomerOrder = () => {
   const { tableNumber } = useParams()
   const [customerInfo, setCustomerInfo] = useState({
@@ -23,6 +23,7 @@ const CustomerOrder = () => {
   const [isInfoSubmitted, setIsInfoSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [showCart, setShowCart] = useState(false)
+  const menuRef = useRef(null);
 
   useEffect(() => {
     loadMenuFromFile()
@@ -140,144 +141,6 @@ const CustomerOrder = () => {
     return cart.reduce((total, item) => total + item.quantity, 0)
   }
 
-  // const placeOrder = async () => {
-  //   if (cart.length === 0) {
-  //     alert('Your cart is empty. Please add items before placing an order.');
-  //     return;
-  //   }
-
-  //   try {
-  //     setLoading(true);
-      
-  //     console.log('🛒 Cart items:', cart);
-      
-  //     const orderData = {
-  //       tableNumber: parseInt(tableNumber),
-  //       customerName: customerInfo.name,
-  //       mobileNumber: customerInfo.mobileNumber,
-  //       items: cart.map(item => ({
-  //         menuItem: item._id, // This will be the ID from your menuItems file
-  //         name: item.name,    // Include name for backup
-  //         quantity: item.quantity,
-  //         price: item.price
-  //       })),
-  //       totalAmount: getTotalAmount()
-  //     };
-
-  //     console.log('📦 Order data:', orderData);
-
-  //     const response = await axios.post(`${API_BASE_URL}/orders`, orderData);
-      
-  //     console.log('✅ Order response:', response.data);
-      
-  //     alert(`Order placed successfully! Your order number is: ${response.data.order.orderNumber}`);
-  //     setCart([]);
-  //     setShowCart(false);
-      
-  //   } catch (error) {
-  //     console.error('❌ Full error details:', error);
-      
-  //     if (error.response && error.response.data) {
-  //       console.error('❌ Backend error message:', error.response.data.message);
-  //       alert(`Error: ${error.response.data.message}`);
-  //     } else {
-  //       alert('Error placing order. Please try again.');
-  //     }
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // }
-
-//   const placeOrder = async () => {
-//   if (cart.length === 0) {
-//     alert('Your cart is empty. Please add items before placing an order.');
-//     return;
-//   }
-
-//   try {
-//     setLoading(true);
-    
-//     const orderData = {
-//       tableNumber: parseInt(tableNumber),
-//       customerName: customerInfo.name,
-//       mobileNumber: customerInfo.mobileNumber,
-//       items: cart.map(item => ({
-//         menuItemId: item._id, // Send as string
-//         name: item.name,
-//         quantity: item.quantity,
-//         price: item.price,
-//         isVeg: item.isVeg
-//       })),
-//       totalAmount: getTotalAmount()
-//     };
-
-//     const response = await axios.post(`${API_BASE_URL}/orders`, orderData);
-    
-//     alert(`Order placed successfully! Your order number is: ${response.data.order.orderNumber}`);
-//     setCart([]);
-//     setShowCart(false);
-    
-//   } catch (error) {
-//     console.error('Order error:', error);
-//     alert('Error placing order. Please try again.');
-//   } finally {
-//     setLoading(false);
-//   }
-// }
-
-// In your CustomerOrder.jsx - replace the placeOrder function
-// const placeOrder = async () => {
-//   if (cart.length === 0) {
-//     alert('Your cart is empty. Please add items before placing an order.');
-//     return;
-//   }
-
-//   try {
-//     setLoading(true);
-    
-//     console.log('🛒 Cart items for order:', cart);
-    
-//     // Create valid MongoDB-like ObjectId strings for the items
-//     // This will satisfy the backend's ObjectId validation
-//     const orderData = {
-//       tableNumber: parseInt(tableNumber),
-//       customerName: customerInfo.name,
-//       mobileNumber: customerInfo.mobileNumber,
-//       items: cart.map(item => ({
-//         menuItem: generateObjectId(), // Generate a valid ObjectId string
-//         name: item.name, // Include the actual name for display
-//         quantity: item.quantity,
-//         price: item.price
-//       })),
-//       totalAmount: getTotalAmount()
-//     };
-
-//     console.log('📦 Final order data:', orderData);
-
-//     const response = await axios.post(`${API_BASE_URL}/orders`, orderData);
-    
-//     console.log('✅ Order response:', response.data);
-    
-//     alert(`Order placed successfully! Your order number is: ${response.data.order.orderNumber}`);
-//     setCart([]);
-//     setShowCart(false);
-    
-//   } catch (error) {
-//     console.error('❌ Full error details:', error);
-//     console.error('❌ Error response:', error.response?.data);
-    
-//     if (error.response && error.response.data) {
-//       alert(`Error: ${error.response.data.message || 'Failed to place order'}`);
-//     } else {
-//       alert('Error placing order. Please try again.');
-//     }
-//   } finally {
-//     setLoading(false);
-//   }
-// }
-
-
-// Replace your placeOrder function with this:
 const placeOrder = async () => {
   if (cart.length === 0) {
     alert('Your cart is empty. Please add items before placing an order.');
@@ -329,21 +192,7 @@ const placeOrder = async () => {
   }
 }
 
-// Generate valid 24-character MongoDB ObjectId
-// const generateMongoObjectId = () => {
-//   const timestamp = Math.floor(new Date().getTime() / 1000).toString(16).padStart(8, '0');
-//   const random = Array(16)
-//     .fill(0)
-//     .map(() => Math.floor(Math.random() * 16).toString(16))
-//     .join('');
-//   return timestamp + random;
-// }
 
-// Test if the function works
-// console.log('🧪 Test ObjectId:', generateMongoObjectId());
-// console.log('🧪 Length:', generateMongoObjectId().length); // Should be 24
-
-// Helper function to generate valid MongoDB-like ObjectId strings
 const generateObjectId = () => {
   const timestamp = Math.floor(new Date().getTime() / 1000).toString(16);
   const randomValue = Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
@@ -360,7 +209,7 @@ const generateObjectId = () => {
       <div className="customer-info-container">
         <div className="customer-info-form">
           <div className="restaurant-header">
-            <h1>☕ Coffee Corner</h1>
+            <h3>Amore Mio</h3>
             <p>Table {tableNumber}</p>
           </div>
           <form onSubmit={handleInfoSubmit}>
@@ -397,12 +246,22 @@ const generateObjectId = () => {
 
   return (
     <div className="customer-order">
+      <div className='cafe-name-overlay'>
+        <img src={background} alt='cafe-img'/>
+        {/* <img src={logo} className='logo-overlay'/> */}
+        <div className='cafe-name'>Amore Mio</div>
+        <button className='btn-primary'
+          onClick={() => {
+            if (menuRef.current) {
+              menuRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }}>Start Ordering</button>
+      </div>
       <header className="order-header">
         <div className="header-content">
-          <div className="header-left">
-            <h1>Amore Mio Cafe</h1>
-            <p>Table {tableNumber} • Ready to order delicious food</p>
-          </div>
+          {/* <div className="header-left"> */}
+            {/* <p>Table {tableNumber} • Ready to order delicious food</p> */}
+          {/* </div> */}
           <div className="header-right">
             <button 
               className="cart-icon-btn"
@@ -418,7 +277,7 @@ const generateObjectId = () => {
       </header>
 
       <div className="order-container">
-        <div className="menu-section">
+        <div className="menu-section" ref={menuRef}> 
           <div className="section-header">
             <div className="category-tabs">
               <button
@@ -464,12 +323,12 @@ const generateObjectId = () => {
                     
                     <div className="item-details">
                       <div className="item-header">
-                        <h3 className="item-name">{item.name}</h3>
+                        <h3 className="item-left">{item.name}</h3>
                         <div className="veg-indicator">
                           {item.isVeg ? (
-                            <span className="veg-icon">🟢 Veg</span>
+                            <span className="veg-icon">Veg</span>
                           ) : (
-                            <span className="non-veg-icon">🔴 Non-Veg</span>
+                            <span className="non-veg-icon">Non-Veg</span>
                           )}
                         </div>
                       </div>
@@ -478,7 +337,7 @@ const generateObjectId = () => {
                       <div className="item-meta">
                         <span className="item-price">₹{item.price}</span>
                         {item.preparationTime && (
-                          <span className="preparation-time">⏱️ {item.preparationTime}min</span>
+                          <span className="preparation-time item-right">⏱️ {item.preparationTime}min</span>
                         )}
                       </div>
 
