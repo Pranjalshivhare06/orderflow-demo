@@ -8,7 +8,7 @@ import TableManagement from './components/TableManagement'
 import MenuManagement from './components/MenuManagement'
 import './App.css'
 import InventoryManagement from './components/InventoryManagement'
-import BillPrinting from './components/BillPrinting'
+import Analysis from './components/Analysis'
 
 function App() {
   return (
@@ -21,7 +21,8 @@ function App() {
           <Route path="/" element={<Navigate to="/reception" replace />} />
           <Route path="/admin/menu" element={<MenuManagement />} />
           <Route path="/inventory" element={<InventoryManagement />} />
-          <Route path="/admin/bill-printing" element={<BillPrinting/>} />
+          {/* <Route path="/admin/bill-printing" element={<BillPrinting/>} /> */}
+          <Route path='/analysis' element={<Analysis/>}/>
         </Routes>
         <ToastContainer 
           position="bottom-right"
