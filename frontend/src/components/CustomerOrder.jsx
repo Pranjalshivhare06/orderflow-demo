@@ -10,6 +10,7 @@ import './CustomerOrder.css'
 import background from '../assets/barista.jpg';
 const API_BASE_URL = 'https://orderflow-backend-v964.onrender.com/api'
 import logo from '../assets/logo.png';
+
 const CustomerOrder = () => {
   const { tableNumber } = useParams()
   const [customerInfo, setCustomerInfo] = useState({

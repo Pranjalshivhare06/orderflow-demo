@@ -6,7 +6,8 @@ import io from 'socket.io-client'
 import axios from 'axios'
 import './ReceptionDashboard.css'
 
-const API_BASE_URL = 'https://orderflow-backend-v964.onrender.com/api'
+// const API_BASE_URL = 'https://orderflow-backend-v964.onrender.com/api'
+const API_BASE_URL = 'http://localhost:5000/api'
 
 const ADMIN_CREDENTIALS = {
   username: import.meta.env.VITE_ADMIN_USERNAME || 'admin',
@@ -121,7 +122,192 @@ const ReceptionDashboard = () => {
     }
   }
 
- 
+ // FIXED: Update order status with proper backend sync
+// const updateOrderStatus = async (orderNumber, newStatus) => {
+//   try {
+//     console.log('🔄 Updating order status:', { orderNumber, newStatus });
+//     setUpdatingOrders(prev => new Set(prev).add(orderNumber));
+
+//     // Find the order
+//     const order = orders.find(o => o.orderNumber === orderNumber);
+    
+//     if (!order) {
+//       alert('Order not found in local data.');
+//       return;
+//     }
+
+//     // Store the original status in case we need to revert
+//     const originalStatus = order.status;
+
+//     // 1. First update backend
+//     console.log('📡 Sending update to backend...');
+//     const response = await axios.patch(
+//       `${API_BASE_URL}/orders/order-number/${orderNumber}/status`, 
+//       { status: newStatus }
+//     );
+
+//     console.log('✅ Backend update successful:', response.data);
+
+//     // 2. Only update local state after backend confirms
+//     setOrders(prev => {
+//       const updatedOrders = prev.map(order => 
+//         order.orderNumber === orderNumber 
+//           ? { 
+//               ...order, 
+//               status: newStatus,
+//               updatedAt: new Date().toISOString()
+//             }
+//           : order
+//       );
+      
+//       calculateStatsFromOrders(updatedOrders);
+//       return updatedOrders;
+//     });
+
+//     console.log('✅ Order status updated successfully');
+
+//     // 3. Emit socket event for real-time updates
+//     if (socketRef.current) {
+//       socketRef.current.emit('order-status-update', {
+//         orderNumber,
+//         status: newStatus
+//       });
+//     }
+
+//   } catch (error) {
+//     console.error('❌ Error updating order status:', error);
+    
+//     // Show detailed error information
+//     const errorMessage = error.response?.data?.message || error.message;
+//     console.error('Error details:', {
+//       status: error.response?.status,
+//       data: error.response?.data,
+//       message: errorMessage
+//     });
+
+//     // Revert local state to original status
+//     setOrders(prev => {
+//       const revertedOrders = prev.map(order => 
+//         order.orderNumber === orderNumber 
+//           ? { ...order, status: originalStatus }
+//           : order
+//       );
+      
+//       calculateStatsFromOrders(revertedOrders);
+//       return revertedOrders;
+//     });
+
+//     alert(`Failed to update order status: ${errorMessage}`);
+    
+//   } finally {
+//     setUpdatingOrders(prev => {
+//       const newSet = new Set(prev);
+//       newSet.delete(orderNumber);
+//       return newSet;
+//     });
+//   }
+// };
+
+// FIXED: Update order status with proper backend sync
+const updateOrderStatus = async (orderNumber, newStatus) => {
+  let originalStatus = null;
+  let originalOrder = null;
+
+  try {
+    console.log('🔄 Updating order status:', { orderNumber, newStatus });
+    setUpdatingOrders(prev => new Set(prev).add(orderNumber));
+
+    // Find the order and store original state
+    const order = orders.find(o => o.orderNumber === orderNumber);
+    
+    if (!order) {
+      alert('Order not found in local data.');
+      return;
+    }
+
+    // Store the original status and order for potential revert
+    originalStatus = order.status;
+    originalOrder = { ...order };
+
+    // 1. First update backend
+    console.log('📡 Sending update to backend...');
+    const response = await axios.patch(
+      `${API_BASE_URL}/orders/order-number/${orderNumber}/status`, 
+      { status: newStatus }
+    );
+
+    console.log('✅ Backend update successful:', response.data);
+
+    // 2. Only update local state after backend confirms
+    setOrders(prev => {
+      const updatedOrders = prev.map(order => 
+        order.orderNumber === orderNumber 
+          ? { 
+              ...order, 
+              status: newStatus,
+              updatedAt: new Date().toISOString()
+            }
+          : order
+      );
+      
+      calculateStatsFromOrders(updatedOrders);
+      return updatedOrders;
+    });
+
+    console.log('✅ Order status updated successfully');
+
+    // 3. Emit socket event for real-time updates
+    if (socketRef.current) {
+      socketRef.current.emit('order-status-update', {
+        orderNumber,
+        status: newStatus
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Error updating order status:', error);
+    
+    // Show detailed error information
+    const errorMessage = error.response?.data?.message || error.message;
+    const errorDetails = error.response?.data;
+    
+    console.error('Error details:', {
+      status: error.response?.status,
+      data: errorDetails,
+      message: errorMessage
+    });
+
+    // Revert local state to original status only if we have the original data
+    if (originalStatus && originalOrder) {
+      console.log('🔄 Reverting local state due to backend error');
+      setOrders(prev => {
+        const revertedOrders = prev.map(order => 
+          order.orderNumber === orderNumber 
+            ? { ...originalOrder } // Restore the entire original order object
+            : order
+        );
+        
+        calculateStatsFromOrders(revertedOrders);
+        return revertedOrders;
+      });
+    }
+
+    // User-friendly error message
+    let userMessage = `Failed to update order status: ${errorMessage}`;
+    if (error.response?.status === 500) {
+      userMessage = 'Server error: Could not update order status. Please try again.';
+    }
+    
+    alert(userMessage);
+    
+  } finally {
+    setUpdatingOrders(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(orderNumber);
+      return newSet;
+    });
+  }
+};
 
   // Request audio permission on user interaction
   useEffect(() => {
@@ -166,6 +352,47 @@ const ReceptionDashboard = () => {
     }
   }
 
+  // Debug function to check backend status update
+const debugBackendStatusUpdate = async (orderNumber, newStatus) => {
+  try {
+    console.log('🔧 DEBUG: Testing backend status update');
+    
+    const testData = {
+      status: newStatus,
+      debug: true,
+      timestamp: new Date().toISOString()
+    };
+
+    console.log('📤 Sending data:', testData);
+    console.log('🌐 URL:', `${API_BASE_URL}/orders/order-number/${orderNumber}/status`);
+
+    const response = await axios.patch(
+      `${API_BASE_URL}/orders/order-number/${orderNumber}/status`,
+      testData,
+      {
+        timeout: 10000,
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      }
+    );
+
+    console.log('✅ Backend response:', response.data);
+    return response.data;
+
+  } catch (error) {
+    console.error('❌ Backend debug failed:', error);
+    console.error('Error response:', error.response?.data);
+    
+    // Log the exact error from backend
+    if (error.response?.data) {
+      console.error('Backend error details:', JSON.stringify(error.response.data, null, 2));
+    }
+    
+    throw error;
+  }
+};
+
   // Check authentication
   useEffect(() => {
     const authStatus = localStorage.getItem('receptionAuth')
@@ -198,7 +425,7 @@ const ReceptionDashboard = () => {
   }, [isAuthenticated])
 
 
-const setupSocketConnection = () => {
+  const setupSocketConnection = () => {
   try {
     const socket = io('https://orderflow-backend-v964.onrender.com')
     socketRef.current = socket
@@ -207,28 +434,23 @@ const setupSocketConnection = () => {
     
     socket.on('new-order', (newOrder) => {
       console.log('🆕 New order via socket:', newOrder)
-      
-      // FIX: Use functional update to get latest state
       setOrders(prev => {
         const updatedOrders = [newOrder, ...prev]
-        // Calculate stats with the updated orders
         calculateStatsFromOrders(updatedOrders)
         return updatedOrders
       })
       
-      // Show notification
       setNewOrder(newOrder)
       setShowNotification(true)
       playNotificationSound()
       
-      // Auto hide notification
       setTimeout(() => setShowNotification(false), 5000)
     })
 
     socket.on('order-status-updated', (updatedOrder) => {
-      console.log('🔄 Order status updated:', updatedOrder)
+      console.log('🔄 Order status updated via socket:', updatedOrder)
       
-      // FIX: Use functional update for status changes too
+      // Update local state with data from backend
       setOrders(prev => {
         const updatedOrders = prev.map(order => 
           order._id === updatedOrder._id ? updatedOrder : order
@@ -238,63 +460,151 @@ const setupSocketConnection = () => {
       })
     })
 
+    // Handle connection errors
+    socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error)
+    })
+
   } catch (error) {
-    console.error('Socket error:', error)
+    console.error('Socket initialization error:', error)
   }
 }
- 
 
-// Client-side only status update (temporary solution)
-const updateOrderStatus = async (orderNumber, newStatus) => {
+// Test API connection
+const testAPIconnection = async () => {
   try {
-    console.log('🔄 Updating order status locally:', { orderNumber, newStatus });
-    setUpdatingOrders(prev => new Set(prev).add(orderNumber));
-
-    const order = orders.find(o => o.orderNumber === orderNumber);
+    console.log('🧪 Testing API connection...');
     
-    if (!order) {
-      alert('Order not found in local data.');
-      return;
-    }
-
-    // Update local state immediately (client-side only)
-    setOrders(prev => {
-      const updatedOrders = prev.map(order => 
-        order.orderNumber === orderNumber 
-          ? { 
-              ...order, 
-              status: newStatus,
-              updatedAt: new Date().toISOString() // Add update timestamp
-            }
-          : order
-      );
+    // Test 1: Check if orders endpoint works
+    const ordersResponse = await axios.get(`${API_BASE_URL}/orders`);
+    console.log('✅ Orders endpoint:', ordersResponse.status);
+    
+    // Test 2: Check if status update endpoint exists
+    // Pick a test order number from your existing orders
+    if (orders.length > 0) {
+      const testOrder = orders[0];
+      console.log('🧪 Test order:', testOrder.orderNumber);
       
-      // Recalculate stats with updated orders
-      calculateStatsFromOrders(updatedOrders);
-      return updatedOrders;
-    });
-
-    console.log('✅ Order status updated locally');
-
-    // Try to update backend, but don't block if it fails
-    try {
-      await updateOrderStatusInBackend(orderNumber, newStatus, order._id);
-    } catch (backendError) {
-      console.warn('⚠️ Backend update failed, but local state updated:', backendError.message);
-      // Don't show error to user since local state is updated
+      // Just test the endpoint without actually updating
+      const testResponse = await axios.options(`${API_BASE_URL}/orders/order-number/${testOrder.orderNumber}/status`);
+      console.log('✅ Status endpoint available:', testResponse.status);
     }
-
+    
   } catch (error) {
-    console.error('❌ Error updating order status:', error);
-    alert('Error updating order status. Please try again.');
-  } finally {
-    setUpdatingOrders(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(orderNumber);
-      return newSet;
+    console.error('❌ API connection test failed:', error);
+    console.log('Error details:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      data: error.response?.data
     });
   }
 };
+
+// Call this in your dashboard temporarily to debug
+useEffect(() => {
+  if (isAuthenticated && orders.length > 0) {
+    testAPIconnection();
+  }
+}, [isAuthenticated, orders.length]);
+
+// const setupSocketConnection = () => {
+//   try {
+//     const socket = io('https://orderflow-backend-v964.onrender.com')
+//     socketRef.current = socket
+    
+//     socket.emit('join-reception')
+    
+//     socket.on('new-order', (newOrder) => {
+//       console.log('🆕 New order via socket:', newOrder)
+      
+//       // FIX: Use functional update to get latest state
+//       setOrders(prev => {
+//         const updatedOrders = [newOrder, ...prev]
+//         // Calculate stats with the updated orders
+//         calculateStatsFromOrders(updatedOrders)
+//         return updatedOrders
+//       })
+      
+//       // Show notification
+//       setNewOrder(newOrder)
+//       setShowNotification(true)
+//       playNotificationSound()
+      
+//       // Auto hide notification
+//       setTimeout(() => setShowNotification(false), 5000)
+//     })
+
+//     socket.on('order-status-updated', (updatedOrder) => {
+//       console.log('🔄 Order status updated:', updatedOrder)
+      
+//       // FIX: Use functional update for status changes too
+//       setOrders(prev => {
+//         const updatedOrders = prev.map(order => 
+//           order._id === updatedOrder._id ? updatedOrder : order
+//         )
+//         calculateStatsFromOrders(updatedOrders)
+//         return updatedOrders
+//       })
+//     })
+
+//   } catch (error) {
+//     console.error('Socket error:', error)
+//   }
+// }
+ 
+
+// Client-side only status update (temporary solution)
+// const updateOrderStatus = async (orderNumber, newStatus) => {
+//   try {
+//     console.log('🔄 Updating order status locally:', { orderNumber, newStatus });
+//     setUpdatingOrders(prev => new Set(prev).add(orderNumber));
+
+//     const order = orders.find(o => o.orderNumber === orderNumber);
+    
+//     if (!order) {
+//       alert('Order not found in local data.');
+//       return;
+//     }
+
+//     // Update local state immediately (client-side only)
+//     setOrders(prev => {
+//       const updatedOrders = prev.map(order => 
+//         order.orderNumber === orderNumber 
+//           ? { 
+//               ...order, 
+//               status: newStatus,
+//               updatedAt: new Date().toISOString() // Add update timestamp
+//             }
+//           : order
+//       );
+      
+//       // Recalculate stats with updated orders
+//       calculateStatsFromOrders(updatedOrders);
+//       return updatedOrders;
+//     });
+
+//     console.log('✅ Order status updated locally');
+
+//     // Try to update backend, but don't block if it fails
+//     try {
+//       await updateOrderStatusInBackend(orderNumber, newStatus, order._id);
+//     } catch (backendError) {
+//       console.warn('⚠️ Backend update failed, but local state updated:', backendError.message);
+//       // Don't show error to user since local state is updated
+//     }
+
+//   } catch (error) {
+//     console.error('❌ Error updating order status:', error);
+//     alert('Error updating order status. Please try again.');
+//   } finally {
+//     setUpdatingOrders(prev => {
+//       const newSet = new Set(prev);
+//       newSet.delete(orderNumber);
+//       return newSet;
+//     });
+//   }
+// };
 
 // Separate function to try backend update (non-blocking)
 const updateOrderStatusInBackend = async (orderNumber, newStatus, orderId) => {
@@ -916,21 +1226,47 @@ const generateBillContent = (order) => {
   }
 
   // Status helpers
-  const getStatusColor = (status) => {
-    const colors = {
-      pending: '#fd7e14',
-      served: '#59a6e9ff',
-      paid: '#28a745'
-    }
-    return colors[status] || '#6c757d'
-  }
+  // const getStatusColor = (status) => {
+  //   const colors = {
+  //     pending: '#fd7e14',
+  //     served: '#59a6e9ff',
+  //     paid: '#28a745'
+  //   }
+  //   return colors[status] || '#6c757d'
+  // }
 
-  const getStatusText = (status) => {
-    const texts = {
-      pending: 'Pending', served: 'Served',  paid: 'Paid'
-    }
-    return texts[status] || status
+  
+
+  // const getStatusText = (status) => {
+  //   const texts = {
+  //     pending: 'Pending', served: 'Served',  paid: 'Paid'
+  //   }
+  //   return texts[status] || status
+  // }
+
+const getStatusColor = (status) => {
+  const colors = {
+    pending: '#fd7e14',
+    confirmed: '#17a2b8',
+    preparing: '#ffc107',
+    ready: '#20c997',
+    served: '#59a6e9ff',
+    cancelled: '#dc3545'
   }
+  return colors[status] || '#6c757d'
+}
+
+const getStatusText = (status) => {
+  const texts = {
+    pending: 'Pending',
+    confirmed: 'Confirmed',
+    preparing: 'Preparing',
+    ready: 'Ready',
+    served: 'Served',
+    cancelled: 'Cancelled'
+  }
+  return texts[status] || status
+}
 
   // Login form
   if (!isAuthenticated) {
@@ -1108,7 +1444,7 @@ const generateBillContent = (order) => {
               </div>
 
               <div className="order-actions">
-                <select
+                {/* <select
                   value={order.status}
                   onChange={(e) => updateOrderStatus(order.orderNumber, e.target.value)}
                   disabled={updatingOrders.has(order.orderNumber)}
@@ -1117,7 +1453,30 @@ const generateBillContent = (order) => {
                   <option value="pending">Pending</option>
                   <option value="served">Served</option>
                   <option value="paid">Paid</option>
-                </select>
+                </select> */}
+                {/* <select
+                  value={order.status}
+                  onChange={(e) => updateOrderStatus(order.orderNumber, e.target.value)}
+                  disabled={updatingOrders.has(order.orderNumber)}
+                  className='status-select'
+                >
+                  <option value="pending">Pending</option>
+                  <option value="served">Served</option>
+                  <option value="paid">Paid</option>
+                </select> */}
+                <select
+                      value={order.status}
+                      onChange={(e) => updateOrderStatus(order.orderNumber, e.target.value)}
+                      disabled={updatingOrders.has(order.orderNumber)}
+                      className='status-select'
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="confirmed">Confirmed</option>
+                      <option value="preparing">Preparing</option>
+                      <option value="ready">Ready</option>
+                      <option value="served">Served</option>
+                      <option value="cancelled">Cancelled</option>
+                  </select>
                 
 
   <button 

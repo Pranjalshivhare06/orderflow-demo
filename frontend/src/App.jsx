@@ -9,6 +9,7 @@ import MenuManagement from './components/MenuManagement'
 import './App.css'
 import InventoryManagement from './components/InventoryManagement'
 import Analysis from './components/Analysis'
+import BillingManagement from './components/BillingManagement'
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           <Route path="/inventory" element={<InventoryManagement />} />
           {/* <Route path="/admin/bill-printing" element={<BillPrinting/>} /> */}
           <Route path='/analysis' element={<Analysis/>}/>
+          <Route path='/billing' element={<BillingManagement/>} />
         </Routes>
         <ToastContainer 
           position="bottom-right"

@@ -6,7 +6,8 @@ const cors = require('cors');
 require('dotenv').config();
 const inventoryRoutes = require('./routes/inventory');
 const orderRoutes = require('./routes/orders');
-
+// const menuRoutes = require('./routes/menu');
+// const menuAvailability = require('./routes/menuAvailable')
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -19,8 +20,13 @@ const io = socketIo(server, {
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use('/api/inventory', inventoryRoutes);
 app.use('/api/orders', orderRoutes);
+// Add this with your other routes
+// const menuRoutes = require('./routes/menu');
+// app.use('/api/menu', menuRoutes);
+// Add with your other routes
+// const menuRoutes = require('./routes/menu');
+// app.use('/api/menu', menuRoutes);
 // Add this with your other routes in server.js
 // app.use('/api/init', require('./routes/init'));
 // Database connection
