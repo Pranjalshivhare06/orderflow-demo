@@ -251,7 +251,7 @@
 // module.exports = router;
 
 
-routes/menu.js
+// routes/menu.js
 const express = require('express');
 const router = express.Router();
 const MenuItem = require('../models/MenuItem');
