@@ -6,8 +6,8 @@ import io from 'socket.io-client'
 import axios from 'axios'
 import './ReceptionDashboard.css'
 
-// const API_BASE_URL = 'https://orderflow-backend-v964.onrender.com/api'
-const API_BASE_URL = 'http://localhost:5000/api'
+const API_BASE_URL = 'https://orderflow-backend-v964.onrender.com/api'
+// const API_BASE_URL = 'http://localhost:5000/api'
 
 const ADMIN_CREDENTIALS = {
   username: import.meta.env.VITE_ADMIN_USERNAME || 'admin',
