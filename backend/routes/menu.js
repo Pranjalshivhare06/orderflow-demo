@@ -252,117 +252,119 @@
 
 
 // routes/menu.js
-const express = require('express');
-const router = express.Router();
-const MenuItem = require('../models/MenuItem');
 
-// GET all menu items
-router.get('/', async (req, res) => {
-  try {
-    const menuItems = await MenuItem.find().sort({ category: 1, name: 1 });
-    res.json({
-      success: true,
-      data: menuItems,
-      message: `Found ${menuItems.length} menu items`
-    });
-  } catch (error) {
-    console.error('Error fetching menu items:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching menu items',
-      error: error.message
-    });
-  }
-});
 
-// GET available menu items (for customer ordering page)
-router.get('/available', async (req, res) => {
-  try {
-    const menuItems = await MenuItem.find({ isAvailable: true }).sort({ category: 1, name: 1 });
-    res.json({
-      success: true,
-      data: menuItems,
-      message: `Found ${menuItems.length} available menu items`
-    });
-  } catch (error) {
-    console.error('Error fetching available menu items:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching available menu items',
-      error: error.message
-    });
-  }
-});
+// const express = require('express');
+// const router = express.Router();
+// const MenuItem = require('../models/MenuItem');
 
-// UPDATE item availability
-router.patch('/:id/availability', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { isAvailable } = req.body;
+// // GET all menu items
+// router.get('/', async (req, res) => {
+//   try {
+//     const menuItems = await MenuItem.find().sort({ category: 1, name: 1 });
+//     res.json({
+//       success: true,
+//       data: menuItems,
+//       message: `Found ${menuItems.length} menu items`
+//     });
+//   } catch (error) {
+//     console.error('Error fetching menu items:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error fetching menu items',
+//       error: error.message
+//     });
+//   }
+// });
 
-    const updatedItem = await MenuItem.findByIdAndUpdate(
-      id,
-      { isAvailable },
-      { new: true, runValidators: true }
-    );
+// // GET available menu items (for customer ordering page)
+// router.get('/available', async (req, res) => {
+//   try {
+//     const menuItems = await MenuItem.find({ isAvailable: true }).sort({ category: 1, name: 1 });
+//     res.json({
+//       success: true,
+//       data: menuItems,
+//       message: `Found ${menuItems.length} available menu items`
+//     });
+//   } catch (error) {
+//     console.error('Error fetching available menu items:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error fetching available menu items',
+//       error: error.message
+//     });
+//   }
+// });
 
-    if (!updatedItem) {
-      return res.status(404).json({
-        success: false,
-        message: 'Menu item not found'
-      });
-    }
+// // UPDATE item availability
+// router.patch('/:id/availability', async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { isAvailable } = req.body;
 
-    res.json({
-      success: true,
-      data: updatedItem,
-      message: `Item ${isAvailable ? 'activated' : 'deactivated'} successfully`
-    });
-  } catch (error) {
-    console.error('Error updating availability:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error updating item availability',
-      error: error.message
-    });
-  }
-});
+//     const updatedItem = await MenuItem.findByIdAndUpdate(
+//       id,
+//       { isAvailable },
+//       { new: true, runValidators: true }
+//     );
 
-// UPDATE entire menu item
-router.put('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updateData = req.body;
+//     if (!updatedItem) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'Menu item not found'
+//       });
+//     }
 
-    const updatedItem = await MenuItem.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true, runValidators: true }
-    );
+//     res.json({
+//       success: true,
+//       data: updatedItem,
+//       message: `Item ${isAvailable ? 'activated' : 'deactivated'} successfully`
+//     });
+//   } catch (error) {
+//     console.error('Error updating availability:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error updating item availability',
+//       error: error.message
+//     });
+//   }
+// });
 
-    if (!updatedItem) {
-      return res.status(404).json({
-        success: false,
-        message: 'Menu item not found'
-      });
-    }
+// // UPDATE entire menu item
+// router.put('/:id', async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const updateData = req.body;
 
-    res.json({
-      success: true,
-      data: updatedItem,
-      message: 'Menu item updated successfully'
-    });
-  } catch (error) {
-    console.error('Error updating menu item:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error updating menu item',
-      error: error.message
-    });
-  }
-});
+//     const updatedItem = await MenuItem.findByIdAndUpdate(
+//       id,
+//       updateData,
+//       { new: true, runValidators: true }
+//     );
 
-module.exports = router;
+//     if (!updatedItem) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'Menu item not found'
+//       });
+//     }
+
+//     res.json({
+//       success: true,
+//       data: updatedItem,
+//       message: 'Menu item updated successfully'
+//     });
+//   } catch (error) {
+//     console.error('Error updating menu item:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error updating menu item',
+//       error: error.message
+//     });
+//   }
+// });
+
+// module.exports = router;
 
 
 // import React, { useState, useEffect } from 'react';
@@ -613,3 +615,273 @@ module.exports = router;
 // };
 
 // export default MenuManagement;
+
+
+const express = require('express');
+const router = express.Router();
+const MenuItem = require('../models/MenuItem');
+
+// GET /api/menu - Get all menu items
+router.get('/', async (req, res) => {
+  try {
+    const { category, available, vegetarian } = req.query;
+    
+    let filter = {};
+    
+    // Filter by category if provided
+    if (category && category !== 'all') {
+      filter.category = category;
+    }
+    
+    // Filter by availability if provided
+    if (available === 'true') {
+      filter.isAvailable = true;
+    } else if (available === 'false') {
+      filter.isAvailable = false;
+    }
+    
+    // Filter by vegetarian if provided
+    if (vegetarian === 'true') {
+      filter.isVegetarian = true;
+    } else if (vegetarian === 'false') {
+      filter.isVegetarian = false;
+    }
+    
+    const menuItems = await MenuItem.find(filter).sort({ category: 1, name: 1 });
+    
+    res.json({
+      success: true,
+      data: menuItems,
+      message: `Found ${menuItems.length} menu items`
+    });
+    
+  } catch (error) {
+    console.error('Error fetching menu items:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching menu items',
+      error: error.message
+    });
+  }
+});
+
+// GET /api/menu/:id - Get single menu item
+router.get('/:id', async (req, res) => {
+  try {
+    const menuItem = await MenuItem.findById(req.params.id);
+    
+    if (!menuItem) {
+      return res.status(404).json({
+        success: false,
+        message: 'Menu item not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: menuItem
+    });
+    
+  } catch (error) {
+    console.error('Error fetching menu item:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching menu item',
+      error: error.message
+    });
+  }
+});
+
+// POST /api/menu - Create new menu item
+router.post('/', async (req, res) => {
+  try {
+    console.log('Creating new menu item:', req.body);
+    
+    const menuItem = new MenuItem(req.body);
+    const savedItem = await menuItem.save();
+    
+    console.log('Menu item created successfully:', savedItem);
+    
+    res.status(201).json({
+      success: true,
+      data: savedItem,
+      message: 'Menu item created successfully'
+    });
+    
+  } catch (error) {
+    console.error('Error creating menu item:', error);
+    res.status(400).json({
+      success: false,
+      message: 'Error creating menu item',
+      error: error.message
+    });
+  }
+});
+
+// PUT /api/menu/:id - Update menu item
+router.put('/:id', async (req, res) => {
+  try {
+    console.log('Updating menu item:', req.params.id, req.body);
+    
+    const menuItem = await MenuItem.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+    
+    if (!menuItem) {
+      return res.status(404).json({
+        success: false,
+        message: 'Menu item not found'
+      });
+    }
+    
+    console.log('Menu item updated successfully:', menuItem);
+    
+    res.json({
+      success: true,
+      data: menuItem,
+      message: 'Menu item updated successfully'
+    });
+    
+  } catch (error) {
+    console.error('Error updating menu item:', error);
+    res.status(400).json({
+      success: false,
+      message: 'Error updating menu item',
+      error: error.message
+    });
+  }
+});
+
+// PATCH /api/menu/:id - Partial update (for availability toggle)
+router.patch('/:id', async (req, res) => {
+  try {
+    console.log('Patching menu item:', req.params.id, req.body);
+    
+    const menuItem = await MenuItem.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+    
+    if (!menuItem) {
+      return res.status(404).json({
+        success: false,
+        message: 'Menu item not found'
+      });
+    }
+    
+    console.log('Menu item patched successfully:', menuItem);
+    
+    res.json({
+      success: true,
+      data: menuItem,
+      message: 'Menu item updated successfully'
+    });
+    
+  } catch (error) {
+    console.error('Error patching menu item:', error);
+    res.status(400).json({
+      success: false,
+      message: 'Error updating menu item',
+      error: error.message
+    });
+  }
+});
+
+// DELETE /api/menu/:id - Delete menu item
+router.delete('/:id', async (req, res) => {
+  try {
+    console.log('Deleting menu item:', req.params.id);
+    
+    const menuItem = await MenuItem.findByIdAndDelete(req.params.id);
+    
+    if (!menuItem) {
+      return res.status(404).json({
+        success: false,
+        message: 'Menu item not found'
+      });
+    }
+    
+    console.log('Menu item deleted successfully:', menuItem);
+    
+    res.json({
+      success: true,
+      message: 'Menu item deleted successfully'
+    });
+    
+  } catch (error) {
+    console.error('Error deleting menu item:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting menu item',
+      error: error.message
+    });
+  }
+});
+
+// POST /api/menu/bulk - Create multiple menu items
+router.post('/bulk', async (req, res) => {
+  try {
+    console.log('Bulk creating menu items:', req.body.length);
+    
+    const menuItems = req.body;
+    const results = [];
+    const errors = [];
+    
+    for (const itemData of menuItems) {
+      try {
+        // Check if item already exists
+        const existingItem = await MenuItem.findOne({ 
+          name: { $regex: new RegExp(`^${itemData.name}$`, 'i') } 
+        });
+        
+        if (existingItem) {
+          // Update existing item
+          const updatedItem = await MenuItem.findByIdAndUpdate(
+            existingItem._id,
+            itemData,
+            { new: true, runValidators: true }
+          );
+          results.push({ action: 'updated', item: updatedItem });
+        } else {
+          // Create new item
+          const newItem = new MenuItem(itemData);
+          const savedItem = await newItem.save();
+          results.push({ action: 'created', item: savedItem });
+        }
+      } catch (error) {
+        errors.push({ item: itemData.name, error: error.message });
+      }
+    }
+    
+    console.log('Bulk operation completed:', {
+      processed: results.length,
+      errors: errors.length
+    });
+    
+    res.json({
+      success: true,
+      data: {
+        processed: results.length,
+        created: results.filter(r => r.action === 'created').length,
+        updated: results.filter(r => r.action === 'updated').length,
+        errors: errors.length,
+        details: results,
+        errors: errors
+      },
+      message: `Bulk operation completed: ${results.length} items processed, ${errors.length} errors`
+    });
+    
+  } catch (error) {
+    console.error('Error in bulk operation:', error);
+    res.status(400).json({
+      success: false,
+      message: 'Error in bulk operation',
+      error: error.message
+    });
+  }
+});
+
+module.exports = router;

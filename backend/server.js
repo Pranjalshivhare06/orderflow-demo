@@ -51,7 +51,7 @@ app.get('/', (req, res) => {
 app.use('/api/menu', require('./routes/menu'));
 
 app.use('/api/init', require('./routes/init')); // ADD THIS LINE
-
+//HEllo updated
 
 app.use('/api/tables', require('./routes/tables'));
 // app.use('/api/menu', require('./routes/menu'));
