@@ -4,7 +4,7 @@ const socketIo = require('socket.io');
 const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
-const inventoryRoutes = require('./routes/inventory');
+const inventoryRoutes= require('./routes/inventory');
 const orderRoutes = require('./routes/orders');
 // const menuRoutes = require('./routes/menu');
 // const menuAvailability = require('./routes/menuAvailable')
@@ -56,6 +56,7 @@ app.use('/api/init', require('./routes/init')); // ADD THIS LINE
 app.use('/api/tables', require('./routes/tables'));
 // app.use('/api/menu', require('./routes/menu'));
 app.use('/api/orders', require('./routes/orders'));
+app.use('/api/inventory', require('./routes/inventory'));
 
 // Socket.io for real-time notifications
 io.on('connection', (socket) => {
