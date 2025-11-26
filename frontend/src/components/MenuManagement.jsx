@@ -20,6 +20,8 @@ const MenuManagement = () => {
     'Beverages',
     'Specials'
   ])
+  const [submitting, setSubmitting] = useState(false)
+
 
   // Form state
   const [formData, setFormData] = useState({
@@ -81,43 +83,135 @@ const MenuManagement = () => {
     }
   }
 
+  // const validateForm = () => {
+  //   const newErrors = {}
+    
+  //   if (!formData.name.trim()) {
+  //     newErrors.name = 'Name is required'
+  //   }
+    
+  //   if (!formData.price || isNaN(formData.price) || parseFloat(formData.price) <= 0) {
+  //     newErrors.price = 'Valid price is required'
+  //   }
+    
+  //   if (!formData.category) {
+  //     newErrors.category = 'Category is required'
+  //   }
+    
+  //   setErrors(newErrors)
+  //   return Object.keys(newErrors).length === 0
+  // }
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault()
+    
+  //   if (!validateForm()) {
+  //     return
+  //   }
+
+  //   try {
+  //     const submitData = {
+  //       ...formData,
+  //       price: parseFloat(formData.price),
+  //       preparationTime: parseInt(formData.preparationTime) || 15
+  //     }
+
+  //     if (editingItem) {
+  //       // Update existing item
+  //       const response = await axios.put(`${API_BASE_URL}/menu/${editingItem._id}`, submitData)
+  //       if (response.data && response.data.success) {
+  //         setMenuItems(prev => {
+  //           const safePrev = Array.isArray(prev) ? prev : []
+  //           return safePrev.map(item => 
+  //             item._id === editingItem._id ? response.data.data : item
+  //           )
+  //         })
+  //         alert('Menu item updated successfully!')
+  //       }
+  //     } else {
+  //       // Create new item
+  //       const response = await axios.post(`${API_BASE_URL}/menu`, submitData)
+  //       if (response.data && response.data.success) {
+  //         setMenuItems(prev => {
+  //           const safePrev = Array.isArray(prev) ? prev : []
+  //           return [response.data.data, ...safePrev]
+  //         })
+  //         alert('Menu item added successfully!')
+  //       }
+  //     }
+
+  //     resetForm()
+  //     setShowAddModal(false)
+  //   } catch (error) {
+  //     console.error('❌ Error saving menu item:', error)
+  //     const errorMessage = error.response?.data?.message || 'Error saving menu item. Please try again.'
+  //     alert(errorMessage)
+  //   }
+  // }
+
   const validateForm = () => {
-    const newErrors = {}
-    
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required'
-    }
-    
-    if (!formData.price || isNaN(formData.price) || parseFloat(formData.price) <= 0) {
-      newErrors.price = 'Valid price is required'
-    }
-    
-    if (!formData.category) {
-      newErrors.category = 'Category is required'
-    }
-    
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+  const newErrors = {}
+  
+  if (!formData.name.trim()) {
+    newErrors.name = 'Name is required'
+  } else if (formData.name.trim().length < 2) {
+    newErrors.name = 'Name must be at least 2 characters long'
   }
+  
+  if (!formData.price || isNaN(formData.price) || parseFloat(formData.price) <= 0) {
+    newErrors.price = 'Valid price is required (greater than 0)'
+  }
+  
+  if (!formData.category) {
+    newErrors.category = 'Category is required'
+  }
+  
+  if (formData.preparationTime && (isNaN(formData.preparationTime) || parseInt(formData.preparationTime) < 1)) {
+    newErrors.preparationTime = 'Preparation time must be at least 1 minute'
+  }
+  
+  setErrors(newErrors)
+  return Object.keys(newErrors).length === 0
+}
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    
-    if (!validateForm()) {
-      return
+  e.preventDefault()
+  
+  if (!validateForm() || submitting) {
+    return
+  }
+
+  try {
+    setSubmitting(true)
+    const submitData = {
+      name: formData.name.trim(),
+      description: formData.description.trim(),
+      price: parseFloat(formData.price),
+      category: formData.category,
+      isVeg: Boolean(formData.isVeg),
+      isAvailable: Boolean(formData.isAvailable),
+      image: formData.image.trim(),
+      preparationTime: parseInt(formData.preparationTime) || 15
     }
 
-    try {
-      const submitData = {
-        ...formData,
-        price: parseFloat(formData.price),
-        preparationTime: parseInt(formData.preparationTime) || 15
-      }
+    console.log('Submitting data:', submitData) // Debug log
 
-      if (editingItem) {
-        // Update existing item
-        const response = await axios.put(`${API_BASE_URL}/menu/${editingItem._id}`, submitData)
-        if (response.data && response.data.success) {
+    let response;
+    if (editingItem) {
+      // Update existing item
+      response = await axios.put(`${API_BASE_URL}/menu/${editingItem._id}`, submitData)
+    } else {
+      // Create new item
+      response = await axios.post(`${API_BASE_URL}/menu`, submitData)
+    }
+
+    console.log('API Response:', response) // Debug log
+
+    // More robust response handling
+    if (response.data) {
+      if (response.data.success) {
+        // Success case
+        if (editingItem) {
           setMenuItems(prev => {
             const safePrev = Array.isArray(prev) ? prev : []
             return safePrev.map(item => 
@@ -125,27 +219,31 @@ const MenuManagement = () => {
             )
           })
           alert('Menu item updated successfully!')
-        }
-      } else {
-        // Create new item
-        const response = await axios.post(`${API_BASE_URL}/menu`, submitData)
-        if (response.data && response.data.success) {
+        } else {
           setMenuItems(prev => {
             const safePrev = Array.isArray(prev) ? prev : []
             return [response.data.data, ...safePrev]
           })
           alert('Menu item added successfully!')
         }
+        resetForm()
+        setShowAddModal(false)
+      } else {
+        // API returned success: false
+        throw new Error(response.data.message || 'Operation failed')
       }
-
-      resetForm()
-      setShowAddModal(false)
-    } catch (error) {
-      console.error('❌ Error saving menu item:', error)
-      const errorMessage = error.response?.data?.message || 'Error saving menu item. Please try again.'
-      alert(errorMessage)
+    } else {
+      throw new Error('Invalid response from server')
     }
+  } catch (error) {
+    console.error('❌ Error saving menu item:', error)
+    const errorMessage = error.response?.data?.message || 
+                        error.response?.data?.error ||
+                        error.message || 
+                        'Error saving menu item. Please try again.'
+    alert(`Error: ${errorMessage}`)
   }
+}
 
   const resetForm = () => {
     setFormData({
@@ -214,6 +312,32 @@ const MenuManagement = () => {
     }
   }
 
+
+  // Test your API endpoint directly first
+const testAPI = async () => {
+  try {
+    const testData = {
+      name: "Test Item",
+      description: "Test Description",
+      price: 10.99,
+      category: "Starters",
+      isVeg: true,
+      isAvailable: true,
+      preparationTime: 15
+    }
+    
+    console.log('Testing API with:', testData)
+    const response = await axios.post(`${API_BASE_URL}/menu`, testData)
+    console.log('Test API Response:', response.data)
+    return response.data
+  } catch (error) {
+    console.error('API Test Failed:', error.response?.data || error.message)
+    return null
+  }
+}
+
+// Call this function somewhere to test your API
+// testAPI()
   // FIXED: Safe function to get items by category
   const getItemsByCategory = () => {
     const categorized = {}
@@ -240,7 +364,6 @@ const MenuManagement = () => {
             ← Back to Dashboard
           </Link>
           <h1>Menu Management</h1>
-          <p>Manage your restaurant menu items</p>
         </div>
       </header>
 
@@ -513,9 +636,13 @@ const MenuManagement = () => {
                   }} className="btn-secondary">
                     Cancel
                   </button>
-                  <button type="submit" className="btn-primary">
-                    {editingItem ? 'Update Item' : 'Add Item'}
-                  </button>
+                  <button 
+  type="submit" 
+  className="btn-primary" 
+  disabled={submitting}
+>
+  {submitting ? 'Saving...' : (editingItem ? 'Update Item' : 'Add Item')}
+</button>
                 </div>
               </form>
             </div>

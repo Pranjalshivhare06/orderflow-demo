@@ -693,11 +693,44 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/menu - Create new menu item
+// router.post('/', async (req, res) => {
+//   try {
+//     console.log('Creating new menu item:', req.body);
+    
+//     const menuItem = new MenuItem(req.body);
+//     const savedItem = await menuItem.save();
+    
+//     console.log('Menu item created successfully:', savedItem);
+    
+//     res.status(201).json({
+//       success: true,
+//       data: savedItem,
+//       message: 'Menu item created successfully'
+//     });
+    
+//   } catch (error) {
+//     console.error('Error creating menu item:', error);
+//     res.status(400).json({
+//       success: false,
+//       message: 'Error creating menu item',
+//       error: error.message
+//     });
+//   }
+// });
+
+// In your backend route (menu.js)
 router.post('/', async (req, res) => {
   try {
     console.log('Creating new menu item:', req.body);
     
-    const menuItem = new MenuItem(req.body);
+    // Handle both isVeg and isVegetarian field names
+    const menuItemData = { ...req.body };
+    if (menuItemData.isVeg !== undefined) {
+      menuItemData.isVegetarian = menuItemData.isVeg;
+      delete menuItemData.isVeg;
+    }
+    
+    const menuItem = new MenuItem(menuItemData);
     const savedItem = await menuItem.save();
     
     console.log('Menu item created successfully:', savedItem);
