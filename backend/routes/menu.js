@@ -719,21 +719,107 @@ router.get('/:id', async (req, res) => {
 // });
 
 // In your backend route (menu.js)
+// router.post('/', async (req, res) => {
+//   try {
+//     console.log('Creating new menu item:', req.body);
+    
+//     // Handle both isVeg and isVegetarian field names
+//     const menuItemData = { ...req.body };
+//     if (menuItemData.isVeg !== undefined) {
+//       menuItemData.isVegetarian = menuItemData.isVeg;
+//       delete menuItemData.isVeg;
+//     }
+    
+//     const menuItem = new MenuItem(menuItemData);
+//     const savedItem = await menuItem.save();
+    
+//     console.log('Menu item created successfully:', savedItem);
+    
+//     res.status(201).json({
+//       success: true,
+//       data: savedItem,
+//       message: 'Menu item created successfully'
+//     });
+    
+//   } catch (error) {
+//     console.error('Error creating menu item:', error);
+//     res.status(400).json({
+//       success: false,
+//       message: 'Error creating menu item',
+//       error: error.message
+//     });
+//   }
+// });
+
+// PUT /api/menu/:id - Update menu item
+// router.put('/:id', async (req, res) => {
+//   try {
+//     console.log('Updating menu item:', req.params.id, req.body);
+    
+//     const menuItem = await MenuItem.findByIdAndUpdate(
+//       req.params.id,
+//       req.body,
+//       { new: true, runValidators: true }
+//     );
+    
+//     if (!menuItem) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'Menu item not found'
+//       });
+//     }
+    
+//     console.log('Menu item updated successfully:', menuItem);
+    
+//     res.json({
+//       success: true,
+//       data: menuItem,
+//       message: 'Menu item updated successfully'
+//     });
+    
+//   } catch (error) {
+//     console.error('Error updating menu item:', error);
+//     res.status(400).json({
+//       success: false,
+//       message: 'Error updating menu item',
+//       error: error.message
+//     });
+//   }
+// });
+
+// POST /api/menu - Create new menu item
 router.post('/', async (req, res) => {
   try {
-    console.log('Creating new menu item:', req.body);
+    console.log('🔔 CREATE MENU ITEM - Raw request body:', req.body);
     
-    // Handle both isVeg and isVegetarian field names
-    const menuItemData = { ...req.body };
-    if (menuItemData.isVeg !== undefined) {
-      menuItemData.isVegetarian = menuItemData.isVeg;
-      delete menuItemData.isVeg;
+    // Transform data to match schema
+    const menuItemData = { 
+      name: req.body.name?.trim(),
+      description: req.body.description?.trim(),
+      price: parseFloat(req.body.price),
+      category: req.body.category,
+      // Handle both field names
+      isVegetarian: req.body.isVeg !== undefined ? req.body.isVeg : req.body.isVegetarian,
+      isAvailable: req.body.isAvailable !== undefined ? req.body.isAvailable : true,
+      image: req.body.image?.trim(),
+      preparationTime: parseInt(req.body.preparationTime) || 15
+    };
+
+    console.log('📝 Processed menu item data:', menuItemData);
+
+    // Validate required fields
+    if (!menuItemData.name || !menuItemData.price || !menuItemData.category) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: name, price, and category are required',
+        received: req.body
+      });
     }
-    
+
     const menuItem = new MenuItem(menuItemData);
     const savedItem = await menuItem.save();
     
-    console.log('Menu item created successfully:', savedItem);
+    console.log('✅ Menu item created successfully:', savedItem._id);
     
     res.status(201).json({
       success: true,
@@ -742,11 +828,33 @@ router.post('/', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Error creating menu item:', error);
-    res.status(400).json({
+    console.error('❌ Error creating menu item:', error);
+    
+    // Mongoose validation error
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors,
+        received: req.body
+      });
+    }
+    
+    // Duplicate key error
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Menu item with this name already exists',
+        error: error.message
+      });
+    }
+    
+    res.status(500).json({
       success: false,
       message: 'Error creating menu item',
-      error: error.message
+      error: error.message,
+      received: req.body
     });
   }
 });
@@ -754,22 +862,42 @@ router.post('/', async (req, res) => {
 // PUT /api/menu/:id - Update menu item
 router.put('/:id', async (req, res) => {
   try {
-    console.log('Updating menu item:', req.params.id, req.body);
+    console.log('🔔 UPDATE MENU ITEM - ID:', req.params.id, 'Data:', req.body);
     
-    const menuItem = await MenuItem.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-    
-    if (!menuItem) {
+    // Check if item exists first
+    const existingItem = await MenuItem.findById(req.params.id);
+    if (!existingItem) {
       return res.status(404).json({
         success: false,
         message: 'Menu item not found'
       });
     }
+
+    // Transform data to match schema
+    const updateData = { 
+      name: req.body.name?.trim(),
+      description: req.body.description?.trim(),
+      price: parseFloat(req.body.price),
+      category: req.body.category,
+      isVegetarian: req.body.isVeg !== undefined ? req.body.isVeg : req.body.isVegetarian,
+      isAvailable: req.body.isAvailable !== undefined ? req.body.isAvailable : existingItem.isAvailable,
+      image: req.body.image?.trim(),
+      preparationTime: parseInt(req.body.preparationTime) || existingItem.preparationTime
+    };
+
+    console.log('📝 Processed update data:', updateData);
+
+    const menuItem = await MenuItem.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { 
+        new: true, 
+        runValidators: true,
+        context: 'query'
+      }
+    );
     
-    console.log('Menu item updated successfully:', menuItem);
+    console.log('✅ Menu item updated successfully:', menuItem);
     
     res.json({
       success: true,
@@ -778,8 +906,25 @@ router.put('/:id', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Error updating menu item:', error);
-    res.status(400).json({
+    console.error('❌ Error updating menu item:', error);
+    
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors
+      });
+    }
+    
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid menu item ID'
+      });
+    }
+    
+    res.status(500).json({
       success: false,
       message: 'Error updating menu item',
       error: error.message

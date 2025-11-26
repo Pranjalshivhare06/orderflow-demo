@@ -92,41 +92,60 @@ const mongoose = require('mongoose');
 const menuItemSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
-    trim: true
+    required: [true, 'Menu item name is required'],
+    trim: true,
+    minlength: [2, 'Name must be at least 2 characters long'],
+    maxlength: [100, 'Name cannot exceed 100 characters']
   },
   price: {
     type: Number,
-    required: true,
-    min: 0
+    required: [true, 'Price is required'],
+    min: [0, 'Price cannot be negative'],
+    max: [10000, 'Price seems too high']
   },
   description: {
     type: String,
-    trim: true
+    trim: true,
+    maxlength: [500, 'Description cannot exceed 500 characters']
   },
   category: {
     type: String,
-    required: true,
-    enum: [
-      'Coffee',
-      'Tea', 
-      'Sandwiches',
-      'Salads',
-      'Pastries',
-      'Breakfast',
-      'Lunch',
-      'Dinner',
-      'Desserts',
-      'Beverages',
-      'Appetizers',
-      'Main Course',
-      'Soups',
-      'Snacks'
-    ]
+    required: [true, 'Category is required'],
+    enum: {
+      values: [
+        'Starters',
+        'Main Course', 
+        'Biryani',
+        'Chinese',
+        'Italian',
+        'Desserts',
+        'Beverages',
+        'Specials',
+        'Coffee',
+        'Tea',
+        'Sandwiches',
+        'Salads',
+        'Pastries',
+        'Breakfast',
+        'Lunch',
+        'Dinner',
+        'Appetizers',
+        'Soups',
+        'Snacks'
+      ],
+      message: '{VALUE} is not a valid category'
+    }
   },
   image: {
     type: String,
-    trim: true
+    trim: true,
+    validate: {
+      validator: function(v) {
+        if (!v) return true // Empty string is allowed
+        return /^https?:\/\/.+\..+/.test(v)
+      },
+      message: 'Please provide a valid image URL'
+    }
   },
   isVegetarian: {
     type: Boolean,
@@ -139,8 +158,8 @@ const menuItemSchema = new mongoose.Schema({
   preparationTime: {
     type: Number,
     default: 15,
-    min: 1,
-    max: 120
+    min: [1, 'Preparation time must be at least 1 minute'],
+    max: [240, 'Preparation time cannot exceed 4 hours']
   },
   ingredients: [{
     type: String,
@@ -153,6 +172,83 @@ const menuItemSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Add index for better performance
+menuItemSchema.index({ name: 'text', description: 'text' });
+menuItemSchema.index({ category: 1, isAvailable: 1 });
+menuItemSchema.index({ isAvailable: 1 });
+
+// Add a pre-save hook to log creation
+menuItemSchema.pre('save', function(next) {
+  console.log(`💾 Saving menu item: ${this.name} (${this._id})`);
+  next();
+});
+
+// module.exports = mongoose.model('MenuItem', menuItemSchema);
+// const menuItemSchema = new mongoose.Schema({
+//   name: {
+//     type: String,
+//     required: true,
+//     trim: true
+//   },
+//   price: {
+//     type: Number,
+//     required: true,
+//     min: 0
+//   },
+//   description: {
+//     type: String,
+//     trim: true
+//   },
+//   category: {
+//     type: String,
+//     required: true,
+//     enum: [
+//       'Coffee',
+//       'Tea', 
+//       'Sandwiches',
+//       'Salads',
+//       'Pastries',
+//       'Breakfast',
+//       'Lunch',
+//       'Dinner',
+//       'Desserts',
+//       'Beverages',
+//       'Appetizers',
+//       'Main Course',
+//       'Soups',
+//       'Snacks'
+//     ]
+//   },
+//   image: {
+//     type: String,
+//     trim: true
+//   },
+//   isVegetarian: {
+//     type: Boolean,
+//     default: true
+//   },
+//   isAvailable: {
+//     type: Boolean,
+//     default: true
+//   },
+//   preparationTime: {
+//     type: Number,
+//     default: 15,
+//     min: 1,
+//     max: 120
+//   },
+//   ingredients: [{
+//     type: String,
+//     trim: true
+//   }],
+//   tags: [{
+//     type: String,
+//     trim: true
+//   }]
+// }, {
+//   timestamps: true
+// });
 
 // Index for better search performance
 menuItemSchema.index({ name: 1, category: 1 });

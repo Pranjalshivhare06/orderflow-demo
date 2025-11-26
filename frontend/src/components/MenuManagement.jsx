@@ -174,7 +174,78 @@ const MenuManagement = () => {
   return Object.keys(newErrors).length === 0
 }
 
-  const handleSubmit = async (e) => {
+//   const handleSubmit = async (e) => {
+//   e.preventDefault()
+  
+//   if (!validateForm() || submitting) {
+//     return
+//   }
+
+//   try {
+//     setSubmitting(true)
+//     const submitData = {
+//       name: formData.name.trim(),
+//       description: formData.description.trim(),
+//       price: parseFloat(formData.price),
+//       category: formData.category,
+//       isVeg: Boolean(formData.isVeg),
+//       isAvailable: Boolean(formData.isAvailable),
+//       image: formData.image.trim(),
+//       preparationTime: parseInt(formData.preparationTime) || 15
+//     }
+
+//     console.log('Submitting data:', submitData) // Debug log
+
+//     let response;
+//     if (editingItem) {
+//       // Update existing item
+//       response = await axios.put(`${API_BASE_URL}/menu/${editingItem._id}`, submitData)
+//     } else {
+//       // Create new item
+//       response = await axios.post(`${API_BASE_URL}/menu`, submitData)
+//     }
+
+//     console.log('API Response:', response) // Debug log
+
+//     // More robust response handling
+//     if (response.data) {
+//       if (response.data.success) {
+//         // Success case
+//         if (editingItem) {
+//           setMenuItems(prev => {
+//             const safePrev = Array.isArray(prev) ? prev : []
+//             return safePrev.map(item => 
+//               item._id === editingItem._id ? response.data.data : item
+//             )
+//           })
+//           alert('Menu item updated successfully!')
+//         } else {
+//           setMenuItems(prev => {
+//             const safePrev = Array.isArray(prev) ? prev : []
+//             return [response.data.data, ...safePrev]
+//           })
+//           alert('Menu item added successfully!')
+//         }
+//         resetForm()
+//         setShowAddModal(false)
+//       } else {
+//         // API returned success: false
+//         throw new Error(response.data.message || 'Operation failed')
+//       }
+//     } else {
+//       throw new Error('Invalid response from server')
+//     }
+//   } catch (error) {
+//     console.error('❌ Error saving menu item:', error)
+//     const errorMessage = error.response?.data?.message || 
+//                         error.response?.data?.error ||
+//                         error.message || 
+//                         'Error saving menu item. Please try again.'
+//     alert(`Error: ${errorMessage}`)
+//   }
+// }
+
+const handleSubmit = async (e) => {
   e.preventDefault()
   
   if (!validateForm() || submitting) {
@@ -183,6 +254,8 @@ const MenuManagement = () => {
 
   try {
     setSubmitting(true)
+    
+    // Prepare data for API - ensure proper data types
     const submitData = {
       name: formData.name.trim(),
       description: formData.description.trim(),
@@ -194,57 +267,123 @@ const MenuManagement = () => {
       preparationTime: parseInt(formData.preparationTime) || 15
     }
 
-    console.log('Submitting data:', submitData) // Debug log
+    console.log('🔄 Submitting menu item:', submitData)
 
-    let response;
+    let response
+    let url = `${API_BASE_URL}/menu`
+    let method = 'POST'
+
     if (editingItem) {
-      // Update existing item
-      response = await axios.put(`${API_BASE_URL}/menu/${editingItem._id}`, submitData)
-    } else {
-      // Create new item
-      response = await axios.post(`${API_BASE_URL}/menu`, submitData)
+      url = `${API_BASE_URL}/menu/${editingItem._id}`
+      method = 'PUT'
     }
 
-    console.log('API Response:', response) // Debug log
+    console.log(`📡 Making ${method} request to:`, url)
 
-    // More robust response handling
-    if (response.data) {
-      if (response.data.success) {
-        // Success case
-        if (editingItem) {
-          setMenuItems(prev => {
-            const safePrev = Array.isArray(prev) ? prev : []
-            return safePrev.map(item => 
-              item._id === editingItem._id ? response.data.data : item
-            )
-          })
-          alert('Menu item updated successfully!')
-        } else {
-          setMenuItems(prev => {
-            const safePrev = Array.isArray(prev) ? prev : []
-            return [response.data.data, ...safePrev]
-          })
-          alert('Menu item added successfully!')
-        }
-        resetForm()
-        setShowAddModal(false)
+    if (editingItem) {
+      response = await axios.put(url, submitData)
+    } else {
+      response = await axios.post(url, submitData)
+    }
+
+    console.log('✅ API Response:', response.data)
+
+    // Handle response
+    if (response.data && response.data.success) {
+      const savedItem = response.data.data
+      
+      if (editingItem) {
+        setMenuItems(prev => {
+          const safePrev = Array.isArray(prev) ? prev : []
+          return safePrev.map(item => 
+            item._id === editingItem._id ? savedItem : item
+          )
+        })
+        alert('✅ Menu item updated successfully!')
       } else {
-        // API returned success: false
-        throw new Error(response.data.message || 'Operation failed')
+        setMenuItems(prev => {
+          const safePrev = Array.isArray(prev) ? prev : []
+          return [savedItem, ...safePrev]
+        })
+        alert('✅ Menu item added successfully!')
       }
+      
+      resetForm()
+      setShowAddModal(false)
     } else {
-      throw new Error('Invalid response from server')
+      throw new Error(response.data.message || 'Operation failed')
     }
+    
   } catch (error) {
     console.error('❌ Error saving menu item:', error)
-    const errorMessage = error.response?.data?.message || 
-                        error.response?.data?.error ||
-                        error.message || 
-                        'Error saving menu item. Please try again.'
-    alert(`Error: ${errorMessage}`)
+    
+    let errorMessage = 'Error saving menu item. Please try again.'
+    
+    if (error.response) {
+      // Server responded with error status
+      const serverError = error.response.data
+      console.error('Server error details:', serverError)
+      
+      if (serverError.errors && Array.isArray(serverError.errors)) {
+        errorMessage = serverError.errors.join(', ')
+      } else if (serverError.message) {
+        errorMessage = serverError.message
+      } else if (serverError.error) {
+        errorMessage = serverError.error
+      }
+    } else if (error.request) {
+      // Request was made but no response received
+      errorMessage = 'No response from server. Please check your connection.'
+    } else {
+      // Something else happened
+      errorMessage = error.message
+    }
+    
+    alert(`❌ Error: ${errorMessage}`)
+  } finally {
+    setSubmitting(false)
   }
 }
 
+// Test your API endpoint with better debugging
+// const testAPI = async () => {
+//   try {
+//     const testData = {
+//       name: "API Test Item",
+//       description: "Testing API connection",
+//       price: 12.99,
+//       category: "Starters",
+//       isVeg: true,
+//       isAvailable: true,
+//       preparationTime: 20,
+//       image: ""
+//     }
+    
+//     console.log('🧪 Testing API with:', testData)
+    
+//     const response = await axios.post(`${API_BASE_URL}/menu`, testData, {
+//       headers: {
+//         'Content-Type': 'application/json',
+//       },
+//       timeout: 10000
+//     })
+    
+//     console.log('✅ API Test Successful:', response.data)
+//     return response.data
+//   } catch (error) {
+//     console.error('❌ API Test Failed:')
+//     console.error('Error message:', error.message)
+//     console.error('Response status:', error.response?.status)
+//     console.error('Response data:', error.response?.data)
+//     console.error('Request config:', error.config)
+//     return null
+//   }
+// }
+
+// Call this in your component or in a useEffect to test
+// useEffect(() => {
+//   testAPI()
+// }, [])
   const resetForm = () => {
     setFormData({
       name: '',
