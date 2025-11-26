@@ -1,252 +1,4 @@
-// const express = require('express');
-// const http = require('http');
-// const socketIo = require('socket.io');
-// const mongoose = require('mongoose');
-// const cors = require('cors');
-// require('dotenv').config();
-// const inventoryRoutes= require('./routes/inventory');
-// const orderRoutes = require('./routes/orders');
-// // const menuRoutes = require('./routes/menu');
-// // const menuAvailability = require('./routes/menuAvailable')
-// const app = express();
-// const server = http.createServer(app);
-// const io = socketIo(server, {
-//   cors: {
-//     origin: "*",
-//     methods: ["GET", "POST"]
-//   }
-// });
 
-// // Middleware
-// app.use(cors());
-// app.use(express.json());
-// app.use('/api/orders', orderRoutes);
-// // Add this with your other routes
-// // const menuRoutes = require('./routes/menu');
-// // app.use('/api/menu', menuRoutes);
-// // Add with your other routes
-// // const menuRoutes = require('./routes/menu');
-// // app.use('/api/menu', menuRoutes);
-// // Add this with your other routes in server.js
-// // app.use('/api/init', require('./routes/init'));
-// // Database connection
-// mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/restaurant_ordering', {
-//   useNewUrlParser: true,
-//   useUnifiedTopology: true,
-// });
-// app.use('/uploads', express.static('uploads')); // Serve static files from uploads directory
-// app.use('/api/upload', require('./routes/upload')); // Add this line to include upload routes
-// const db = mongoose.connection;
-// db.on('error', console.error.bind(console, 'MongoDB connection error:'));
-// db.once('open', () => {
-//   console.log('Connected to MongoDB successfully!');
-// });
-
-// // Basic route for testing
-// app.get('/', (req, res) => {
-//   res.json({ message: 'Restaurant Ordering API is running!' });
-// });
-
-// // Routes
-// app.use('/api/menu', require('./routes/menu'));
-
-// app.use('/api/init', require('./routes/init')); // ADD THIS LINE
-// //HEllo updated
-
-// app.use('/api/tables', require('./routes/tables'));
-// // app.use('/api/menu', require('./routes/menu'));
-// app.use('/api/orders', require('./routes/orders'));
-// app.use('/api/inventory', require('./routes/inventory'));
-
-// // Socket.io for real-time notifications
-// io.on('connection', (socket) => {
-//   console.log('New client connected');
-  
-//   socket.on('join-reception', () => {
-//     socket.join('reception');
-//     console.log('Reception joined real-time updates');
-//   });
-  
-//   socket.on('disconnect', () => {
-//     console.log('Client disconnected');
-//   });
-// });
-
-// // Make io accessible to routes
-// app.set('io', io);
-
-// const PORT = process.env.PORT || 5000;
-// server.listen(PORT, () => {
-//   console.log(`Server running on port ${PORT}`);
-//   console.log(`API URL: http://localhost:${PORT}`);
-// });
-
-
-// const express = require('express');
-// const http = require('http');
-// const socketIo = require('socket.io');
-// const mongoose = require('mongoose');
-// const cors = require('cors');
-// require('dotenv').config();
-
-// const app = express();
-// const server = http.createServer(app);
-
-// // Socket.io configuration with better options
-// const io = socketIo(server, {
-//   cors: {
-//     origin: "*",
-//     methods: ["GET", "POST", "PUT", "DELETE"],
-//     credentials: true
-//   },
-//   pingTimeout: 60000,
-//   pingInterval: 25000
-// });
-
-// // Middleware
-// app.use(cors());
-// app.use(express.json());
-
-// // Make io accessible to routes BEFORE importing routes
-// app.set('io', io);
-
-// // Database connection
-// mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/restaurant_ordering', {
-//   useNewUrlParser: true,
-//   useUnifiedTopology: true,
-// })
-// .then(() => {
-//   console.log('✅ Connected to MongoDB successfully!');
-// })
-// .catch((error) => {
-//   console.error('❌ MongoDB connection error:', error);
-// });
-
-// const db = mongoose.connection;
-// db.on('error', console.error.bind(console, 'MongoDB connection error:'));
-// db.once('open', () => {
-//   console.log('📊 MongoDB connection established');
-// });
-
-// // Static files
-// app.use('/uploads', express.static('uploads'));
-
-// // Routes - REMOVE DUPLICATES
-// app.use('/api/upload', require('./routes/upload'));
-// app.use('/api/menu', require('./routes/menu'));
-// app.use('/api/init', require('./routes/init'));
-// app.use('/api/tables', require('./routes/tables'));
-// app.use('/api/orders', require('./routes/orders')); // ONLY ONCE
-// app.use('/api/inventory', require('./routes/inventory'));
-
-// // Basic route for testing
-// app.get('/', (req, res) => {
-//   res.json({ 
-//     message: 'Restaurant Ordering API is running!',
-//     version: '1.0',
-//     endpoints: {
-//       orders: '/api/orders',
-//       menu: '/api/menu',
-//       tables: '/api/tables',
-//       inventory: '/api/inventory'
-//     }
-//   });
-// });
-
-// // Health check endpoint
-// app.get('/health', (req, res) => {
-//   res.json({ 
-//     status: 'OK',
-//     timestamp: new Date().toISOString(),
-//     uptime: process.uptime(),
-//     database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'
-//   });
-// });
-
-// // Enhanced Socket.io for real-time notifications
-// io.on('connection', (socket) => {
-//   console.log('🔌 New client connected:', socket.id);
-  
-//   // Reception dashboard joins
-//   socket.on('join-reception', () => {
-//     socket.join('reception');
-//     console.log('📋 Reception dashboard joined:', socket.id);
-    
-//     // Send confirmation to client
-//     socket.emit('reception-joined', { 
-//       message: 'Connected to real-time updates',
-//       room: 'reception'
-//     });
-//   });
-
-//   // Kitchen display joins
-//   socket.on('join-kitchen', () => {
-//     socket.join('kitchen');
-//     console.log('👨‍🍳 Kitchen display joined:', socket.id);
-    
-//     socket.emit('kitchen-joined', {
-//       message: 'Connected to kitchen updates',
-//       room: 'kitchen'
-//     });
-//   });
-
-//   // Handle manual order refresh
-//   socket.on('refresh-orders', () => {
-//     console.log('🔄 Manual refresh requested by:', socket.id);
-//     // You can broadcast to specific rooms if needed
-//     socket.to('reception').emit('orders-refreshed');
-//     socket.to('kitchen').emit('orders-refreshed');
-//   });
-
-//   // Handle connection errors
-//   socket.on('connect_error', (error) => {
-//     console.error('❌ Socket connection error:', error);
-//   });
-
-//   socket.on('error', (error) => {
-//     console.error('❌ Socket error:', error);
-//   });
-
-//   socket.on('disconnect', (reason) => {
-//     console.log('🔌 Client disconnected:', socket.id, 'Reason:', reason);
-//   });
-
-//   // Ping-pong for connection monitoring
-//   socket.on('ping', (data) => {
-//     socket.emit('pong', { ...data, serverTime: new Date().toISOString() });
-//   });
-// });
-
-// // Global error handler for uncaught exceptions
-// process.on('uncaughtException', (error) => {
-//   console.error('❌ Uncaught Exception:', error);
-// });
-
-// process.on('unhandledRejection', (reason, promise) => {
-//   console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
-// });
-
-// const PORT = process.env.PORT || 5000;
-// server.listen(PORT, () => {
-//   console.log(`
-// 🚀 Server running on port ${PORT}
-// 📊 API URL: http://localhost:${PORT}
-// 🔌 Socket.io: http://localhost:${PORT}
-// 📈 Health check: http://localhost:${PORT}/health
-//   `);
-// });
-
-// // Graceful shutdown
-// process.on('SIGINT', () => {
-//   console.log('\n🛑 Shutting down server gracefully...');
-//   server.close(() => {
-//     console.log('✅ HTTP server closed.');
-//     mongoose.connection.close(false, () => {
-//       console.log('✅ MongoDB connection closed.');
-//       process.exit(0);
-//     });
-//   });
-// });
 
 
 
@@ -256,9 +8,15 @@ const socketIo = require('socket.io');
 const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
+const cors = require('cors'); // ← Add this line
 
 const app = express();
 const server = http.createServer(app);
+
+app.use(cors({
+  origin: ['https://dapper-muffin-326944.netlify.app', 'http://localhost:3000'],
+  credentials: true
+}));
 
 // Enhanced Socket.io configuration for Render
 const io = socketIo(server, {
@@ -279,16 +37,16 @@ const io = socketIo(server, {
 });
 
 // Middleware
-app.use(cors({
-  origin: [
-    "https://orderflow-frontend.onrender.com",
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "*"
-  ],
-  credentials: true
-}));
-app.use(express.json());
+// app.use(cors({
+//   origin: [
+//     "https://orderflow-frontend.onrender.com",
+//     "http://localhost:3000",
+//     "http://localhost:5173",
+//     "*"
+//   ],
+//   credentials: true
+// }));
+// app.use(express.json());
 
 // Make io accessible to routes
 app.set('io', io);
