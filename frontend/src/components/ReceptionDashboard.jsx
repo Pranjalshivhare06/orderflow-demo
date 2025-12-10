@@ -132,7 +132,9 @@ const ReceptionDashboard = () => {
       }
 
       // Use wss:// for secure WebSocket on Render
-      const socketUrl = 'wss://orderflow-backend-v964.onrender.com';
+      // const socketUrl = 'wss://orderflow-backend-v964.onrender.com';
+      const socketUrl = 'https://the-tea-cartel-1.onrender.com';
+
       const socket = io(socketUrl, {
         transports: ['websocket', 'polling'],
         reconnection: true,
