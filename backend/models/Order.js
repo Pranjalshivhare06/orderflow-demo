@@ -109,8 +109,7 @@ orderSchema.pre('save', function(next) {
     }
     
     // Calculate tax (5%) and total
-    this.taxAmount = parseFloat((this.subtotal * 0.05).toFixed(2));
-    this.totalAmount = parseFloat((this.subtotal + this.taxAmount).toFixed(2));
+    this.totalAmount = parseFloat((this.subtotal).toFixed(2));
     this.finalTotal = this.totalAmount;
     
     // ✅ FIXED: Better order number generation with collision handling

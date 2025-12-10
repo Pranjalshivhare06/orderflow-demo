@@ -474,7 +474,7 @@ const menuItems = [
   },
   {
     id: 39,
-    name: "Vada Pav with Cheese Single",
+    name: "VadaPav Cheese",
     category: "Vada Pav",
     price: 60,
     description: "Classic vada pav with melted cheese topping.",
@@ -486,7 +486,7 @@ const menuItems = [
   },
   {
     id: 40,
-    name: "Vada Pav with Cheese Double",
+    name: "VadaPav Cheese Double",
     category: "Vada Pav",
     price: 80,
     description: "Double vada with cheese for cheese lovers.",

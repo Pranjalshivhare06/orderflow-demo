@@ -272,24 +272,7 @@ socket.emit('join-reception');
     }, 5000);
   };
 
-  // const handleOrderUpdate = (updatedOrder) => {
-  //   setOrders(prev => {
-  //     const updatedOrders = prev.map(order => 
-  //       order._id === updatedOrder._id ? { ...updatedOrder, updatedAt: new Date().toISOString() } : order
-  //     );
-  //     calculateStatsFromOrders(updatedOrders);
-      
-  //     // Update table status based on order status
-  //     if (updatedOrder.status === 'paid' || updatedOrder.status === 'cancelled') {
-  //       updateTableOrder(updatedOrder.tableNumber, null);
-  //     } else {
-  //       updateTableOrder(updatedOrder.tableNumber, updatedOrder);
-  //     }
-      
-  //     return updatedOrders;
-  //   });
-  // };
-
+ 
 
   const handleOrderUpdate = (updatedOrder) => {
   console.log('🔄 Handling order update for stats:', updatedOrder.orderNumber, 'status:', updatedOrder.status);
@@ -410,58 +393,7 @@ socket.emit('join-reception');
     ))
   }
 
-  // Enhanced stats calculation with proper revenue calculation
-  // const calculateStatsFromOrders = (ordersData) => {
-  //   try {
-  //     const totalOrders = ordersData.length
-      
-  //     // FIXED: Include served orders in pending count (they're still visible for billing)
-  //     const pendingOrders = ordersData.filter(order => 
-  //       ['pending', 'confirmed', 'preparing', 'ready', 'served'].includes(order.status)
-  //     ).length
-      
-  //     // FIXED: Calculate revenue from paid orders with proper amount parsing
-  //     const totalRevenue = ordersData
-  //       .filter(order => order.status === 'paid')
-  //       .reduce((total, order) => {
-  //         // Try multiple possible amount fields and ensure it's a number
-  //         let orderAmount = 0;
-          
-  //         if (order.finalTotal !== undefined && order.finalTotal !== null) {
-  //           orderAmount = parseFloat(order.finalTotal) || 0;
-  //         } else if (order.totalAmount !== undefined && order.totalAmount !== null) {
-  //           orderAmount = parseFloat(order.totalAmount) || 0;
-  //         } else if (order.total !== undefined && order.total !== null) {
-  //           orderAmount = parseFloat(order.total) || 0;
-  //         }
-          
-  //         // Also check if items exist and calculate from items if amount is 0
-  //         if (orderAmount === 0 && order.items && Array.isArray(order.items)) {
-  //           orderAmount = order.items.reduce((sum, item) => {
-  //             const itemPrice = parseFloat(item.price) || 0;
-  //             const itemQuantity = parseInt(item.quantity) || 1;
-  //             return sum + (itemPrice * itemQuantity);
-  //           }, 0);
-            
-  //           // Add tax if applicable
-  //           if (order.taxAmount) {
-  //             orderAmount += parseFloat(order.taxAmount) || 0;
-  //           }
-  //         }
-          
-  //         console.log(`💰 Order ${order.orderNumber}: ${orderAmount} (from finalTotal: ${order.finalTotal}, totalAmount: ${order.totalAmount})`);
-  //         return total + orderAmount;
-  //       }, 0);
-
-  //     console.log(`📊 Stats - Total: ${totalOrders}, Pending: ${pendingOrders}, Revenue: ${totalRevenue}`);
-      
-  //     setStats({ totalOrders, pendingOrders, totalRevenue });
-  //   } catch (error) {
-  //     console.error('Error calculating stats:', error);
-  //   }
-  // };
-
-
+  
   // FIXED: Enhanced stats calculation with proper revenue calculation
 const calculateStatsFromOrders = (ordersData) => {
   try {
@@ -501,8 +433,8 @@ const calculateStatsFromOrders = (ordersData) => {
             }, 0);
             
             // Add tax if available
-            const tax = parseFloat(order.taxAmount) || 0;
-            orderAmount = itemsTotal + tax;
+            // const tax = parseFloat(order.taxAmount) || 0;
+            orderAmount = itemsTotal;
           }
         }
         
@@ -527,80 +459,7 @@ const calculateStatsFromOrders = (ordersData) => {
     console.error('❌ Error calculating stats:', error);
   }
 };
-  // FIXED: Enhanced order status update with socket emission - Don't remove paid orders
-  // const updateOrderStatus = async (orderNumber, newStatus) => {
-  //   try {
-  //     console.log('🔄 Updating order status:', { orderNumber, newStatus })
-  //     setUpdatingOrders(prev => new Set(prev).add(orderNumber))
 
-  //     const order = orders.find(o => o.orderNumber === orderNumber)
-      
-  //     if (!order) {
-  //       alert('Order not found in local data.')
-  //       return
-  //     }
-
-  //     console.log('📡 Sending to backend:', { orderId: order._id, status: newStatus })
-
-  //     // Update local state immediately for better UX
-  //     setOrders(prev => {
-  //       const updatedOrders = prev.map(o => 
-  //         o.orderNumber === orderNumber 
-  //           ? { ...o, status: newStatus, updatedAt: new Date().toISOString() }
-  //           : o
-  //       )
-  //       calculateStatsFromOrders(updatedOrders)
-  //       return updatedOrders
-  //     })
-
-  //     // Emit socket event for real-time update
-  //     if (socketRef.current && socketConnected) {
-  //       socketRef.current.emit('update-order-status', {
-  //         orderId: order._id,
-  //         status: newStatus
-  //       })
-  //     }
-
-  //     // Try to update backend but don't block on failure
-  //     try {
-  //       // Try multiple endpoints
-  //       try {
-  //         await axios.put(`${API_BASE_URL}/orders/${order._id}/status`, { 
-  //           status: newStatus 
-  //         }, { timeout: 5000 })
-  //       } catch (error) {
-  //         await axios.put(`${API_BASE_URL}/orders/${order._id}`, { 
-  //           status: newStatus 
-  //         }, { timeout: 5000 })
-  //       }
-  //       console.log('✅ Backend update successful')
-  //     } catch (error) {
-  //       console.warn('⚠️ Backend update failed, but local state updated:', error.message)
-  //     }
-
-  //     // FIXED: Only update table status, don't remove order from list
-  //     if (newStatus === 'paid' || newStatus === 'cancelled') {
-  //       updateTableOrder(order.tableNumber, null)
-  //     } else {
-  //       updateTableOrder(order.tableNumber, { ...order, status: newStatus })
-  //     }
-
-  //     console.log('✅ Order status updated successfully')
-
-  //   } catch (error) {
-  //     console.error('❌ Error updating order status:', error)
-  //     alert('Failed to update order status: ' + error.message)
-      
-  //     // Revert local state on error
-  //     fetchOrders() // Refresh data
-  //   } finally {
-  //     setUpdatingOrders(prev => {
-  //       const newSet = new Set(prev)
-  //       newSet.delete(orderNumber)
-  //       return newSet
-  //     })
-  //   }
-  // }
 
   const updateOrderStatus = async (orderNumber, newStatus) => {
   try {
@@ -668,93 +527,6 @@ const calculateStatsFromOrders = (ordersData) => {
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
   }
-
-  // FIXED: Enhanced combined bill - mark as paid and remove table group
-  // const generateCombinedBill = async (tableNumber) => {
-  //   try {
-  //     console.log('🧾 Generating combined bill for table:', tableNumber)
-      
-  //     // FIXED: Only include orders that are NOT paid for combined billing
-  //     const tableOrders = orders.filter(order => 
-  //       order.tableNumber === tableNumber && 
-  //       order.status !== 'cancelled' && 
-  //       order.status !== 'paid' // Only include unpaid orders
-  //     )
-
-  //     if (tableOrders.length === 0) {
-  //       alert(`No active (unpaid) orders found for Table ${tableNumber}`)
-  //       return
-  //     }
-
-  //     // Combine all items
-  //     const combinedItems = []
-  //     let totalAmount = 0
-  //     let customerName = ''
-  //     let mobileNumber = ''
-
-  //     tableOrders.forEach(order => {
-  //       if (!customerName && order.customerName) {
-  //         customerName = order.customerName
-  //         mobileNumber = order.mobileNumber
-  //       }
-
-  //       order.items?.forEach(item => {
-  //         const itemName = item.name || item.menuItem?.name || 'Item'
-  //         const itemPrice = item.price || 0
-  //         const itemQuantity = item.quantity || 1
-          
-  //         const existingItem = combinedItems.find(combinedItem => 
-  //           combinedItem.name === itemName && combinedItem.price === itemPrice
-  //         )
-
-  //         if (existingItem) {
-  //           existingItem.quantity += itemQuantity
-  //         } else {
-  //           combinedItems.push({
-  //             name: itemName,
-  //             price: itemPrice,
-  //             quantity: itemQuantity,
-  //             isVeg: item.isVeg
-  //           })
-  //         }
-  //       })
-
-  //       totalAmount += order.totalAmount || order.finalTotal || 0
-  //     })
-
-  //     // Create combined order
-  //     const combinedOrder = {
-  //       orderNumber: `COMBINED-${Date.now()}`,
-  //       tableNumber: tableNumber,
-  //       customerName: customerName || 'Walk-in Customer',
-  //       mobileNumber: mobileNumber || 'N/A',
-  //       items: combinedItems,
-  //       totalAmount: totalAmount,
-  //       taxAmount: totalAmount * 0.05,
-  //       finalTotal: totalAmount * 1.05,
-  //       createdAt: new Date().toISOString(),
-  //       isCombinedBill: true,
-  //       originalOrders: tableOrders.map(order => order.orderNumber)
-  //     }
-
-  //     console.log('📊 Combined bill details:', combinedOrder)
-
-  //     // Print combined bill
-  //     printThermalBill(combinedOrder)
-
-  //     // FIXED: Mark all original orders as PAID after printing bill
-  //     tableOrders.forEach(order => {
-  //       updateOrderStatus(order.orderNumber, 'paid')
-  //     })
-
-  //     // Show success message
-  //     alert(`Combined bill generated for Table ${tableNumber}! All orders marked as paid. Table group removed.`)
-
-  //   } catch (error) {
-  //     console.error('❌ Error generating combined bill:', error)
-  //     alert('Error generating combined bill: ' + error.message)
-  //   }
-  // }
 
   // In your ReceptionDashboard.jsx - Update generateCombinedBill function
 const generateCombinedBill = async (tableNumber) => {
@@ -1004,19 +776,16 @@ const generateCombinedBill = async (tableNumber) => {
         <body>
           <div class="bill-container">
             <div class="bill-header">
-              <div class="restaurant-name">AMORE MIO</div>
-              <div>Restaurant & Cafe</div>
+              <div class="restaurant-name">The Chai Cartel</div>
               <div>--------------------------------</div>
             </div>
             
             <div class="bill-info">
-              <div><strong>Order #:</strong> ${order.orderNumber}</div>
               <div><strong>Date:</strong> ${new Date(order.createdAt).toLocaleDateString('en-IN')}</div>
               <div><strong>Time:</strong> ${new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</div>
               <div><strong>Table:</strong> ${order.tableNumber}</div>
               <div><strong>Customer:</strong> ${order.customerName || 'Walk-in'}</div>
               ${order.mobileNumber ? `<div><strong>Mobile:</strong> ${order.mobileNumber}</div>` : ''}
-              ${order.isCombinedBill ? `<div><strong>Type:</strong> Combined Bill</div>` : ''}
             </div>
             
             <table class="items-table">

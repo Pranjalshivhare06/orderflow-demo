@@ -384,65 +384,36 @@ body {
 
 /*right*/
 .item-details {
-  padding: 1.5rem;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  
 }
 
 .item-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  /* gap: 1rem; */
+  /* gap: 1rem; */ /* Consider reducing gap if needed */
 }
 
 .item-header h3 {
-  display: flex;
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--dark-text);
   margin: 0;
-  line-height: 0.2;
+  line-height: 1.2; /* Fixed from 0.1 */
   flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.veg-indicator {
-  flex-shrink: 0;
-}
-
-.veg-icon, .non-veg-icon {
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.veg-icon {
-  background: rgba(56, 161, 105, 0.1);
-  color: var(--success-green);
-  border: 1px solid var(--success-green);
-}
-
-.non-veg-icon {
-  background: rgba(229, 62, 62, 0.1);
-  color: var(--error-red);
-  border: 1px solid var(--error-red);
-}
-
-.item-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.item-price {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--primary-red);
+/* If you have other elements in .item-header */
+.item-header .price {
+  flex-shrink: 0; /* Prevents price from shrinking */
+  margin-left: 0.5rem; /* Adds spacing after name */
 }
 
 .preparation-time {

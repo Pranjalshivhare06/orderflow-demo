@@ -179,8 +179,8 @@ const placeOrder = async () => {
     
     if (response.data.success) {
       const order = response.data.data || response.data.order;
-      alert(`✅ Order placed successfully!\nOrder #: ${order.orderNumber}\nTotal: ₹${order.totalAmount.toFixed(2)}`);
-      
+      // alert(`✅ Order placed successfully!\nOrder #: ${order.orderNumber}\nTotal: ₹${order.totalAmount.toFixed(2)}`);
+      alert("Order Placed Successfully✅")
       // Clear cart and close modal
       setCart([]);
       setShowCart(false);
@@ -508,14 +508,8 @@ const generateObjectId = () => {
                       <span>Subtotal:</span>
                       <span>₹{getTotalAmount()}</span>
                     </div>
-                    <div className="total-line">
-                      <span>Tax (5%):</span>
-                      <span>₹{(getTotalAmount() * 0.05).toFixed(2)}</span>
-                    </div>
-                    <div className="total-line grand-total">
-                      <span>Total:</span>
-                      <span>₹{(getTotalAmount() * 1.05).toFixed(2)}</span>
-                    </div>
+                    
+                  
                   </div>
                   
                   <button 
@@ -526,7 +520,9 @@ const generateObjectId = () => {
                     {loading ? (
                       <div className="loading-spinner"></div>
                     ) : (
-                      `Place Order • ₹${(getTotalAmount() * 1.05).toFixed(2)}`
+                      // `Place Order • ₹${(getTotalAmount() * 1.05).toFixed(2)}`
+                      `Place Order • ₹${(getTotalAmount()).toFixed(2)}`
+
                     )}
                   </button>
                 </>
