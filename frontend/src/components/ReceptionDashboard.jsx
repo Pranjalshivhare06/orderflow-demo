@@ -147,6 +147,47 @@ const ReceptionDashboard = () => {
       
       socketRef.current = socket;
       
+
+      // ===== ADD THESE DEBUG LISTENERS =====
+
+// 1. Connection status
+socket.on('connect', () => {
+  console.log('✅ SOCKET.IO CONNECTED - ID:', socket.id);
+  console.log('📡 Connected to:', socketUrl);
+});
+
+socket.on('connect_error', (error) => {
+  console.error('❌ SOCKET.IO CONNECT ERROR:', error.message);
+  console.error('Error type:', error.type);
+  console.error('Error description:', error.description);
+  console.error('Full error:', error);
+});
+
+socket.on('disconnect', (reason) => {
+  console.log('🔌 SOCKET.IO DISCONNECTED - Reason:', reason);
+});
+
+// 2. Check if you receive the initial 'connected' event from server
+socket.on('connected', (data) => {
+  console.log('🎯 Server connection confirmed:', data);
+});
+
+// 3. Listen for all events (debug)
+socket.onAny((eventName, ...args) => {
+  console.log(`📨 Received event: "${eventName}"`, args);
+});
+
+// 4. Emit a test event to verify two-way communication
+socket.emit('test-connection', {
+  message: 'Testing from frontend',
+  timestamp: new Date().toISOString(),
+  url: window.location.href
+});
+
+// 5. Join the reception room (if your app needs it)
+socket.emit('join-reception');
+
+
       // Connection events
       socket.on('connect', () => {
         console.log('✅ Socket connected successfully');
