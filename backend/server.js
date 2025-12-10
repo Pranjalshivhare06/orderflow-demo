@@ -17,7 +17,8 @@ const server = http.createServer(app);
 // ✅ FIXED: Simplified CORS configuration
 app.use(cors({
   origin: [
-    'https://dapper-muffin-326944.netlify.app',
+    'https://scintillating-pithivier-3fc2d1.netlify.app',
+    // 'https://dapper-muffin-326944.netlify.app',
     // 'https://orderflow-frontend.onrender.com',
     'https://the-tea-cartel-1.onrender.com',
     'http://localhost:3000', 
@@ -59,7 +60,9 @@ app.use((req, res, next) => {
 const io = socketIo(server, {
   cors: {
     origin: [
-      "https://dapper-muffin-326944.netlify.app",
+          'https://scintillating-pithivier-3fc2d1.netlify.app',
+
+      // "https://dapper-muffin-326944.netlify.app",
       // "https://orderflow-frontend.onrender.com",
       'https://the-tea-cartel-1.onrender.com',
       "http://localhost:3000",
