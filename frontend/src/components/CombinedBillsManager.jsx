@@ -4,7 +4,8 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import './CombinedBillsManager.css';
 
-const API_BASE_URL = 'https://orderflow-backend-v964.onrender.com/api';
+// const API_BASE_URL = 'https://orderflow-backend-v964.onrender.com/api';
+const API_BASE_URL = 'https://the-tea-cartel-1.onrender.com/api';
 
 const CombinedBillsManager = () => {
   const [combinedBills, setCombinedBills] = useState([]);

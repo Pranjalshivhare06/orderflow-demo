@@ -10,7 +10,8 @@ import './CustomerOrder.css'
 // import background from '../assets/barista.jpg';
 import background from '../assets/inside.jpeg';
 
-const API_BASE_URL = 'https://orderflow-backend-v964.onrender.com/api'
+// const API_BASE_URL = 'https://orderflow-backend-v964.onrender.com/api'
+const API_BASE_URL = 'https://the-tea-cartel-1.onrender.com/api';
 import logo from '../assets/logo.png';
 
 // const API_BASE_URL = 'http://localhost:5000/api';
