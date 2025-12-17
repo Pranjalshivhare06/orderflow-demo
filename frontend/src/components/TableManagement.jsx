@@ -115,8 +115,8 @@ const TableManagement = () => {
   const printQRCode = (tableNumber) => {
     try {
       const printWindow = window.open('', '_blank', 'width=400,height=600')
-      const baseUrl = 'https://dapper-muffin-326944.netlify.app'
-      
+      // const baseUrl = 'https://dapper-muffin-326944.netlify.app'
+      const baseUrl = 'https://scintillating-pithivier-3fc2d1.netlify.app'
       printWindow.document.write(`
         <!DOCTYPE html>
         <html>
@@ -187,7 +187,7 @@ const TableManagement = () => {
         </head>
         <body>
           <div class="print-container">
-            <div class="restaurant-name">AMORE MIO</div>
+            <div class="restaurant-name">THE CHAI CARTEL</div>
             <div class="table-number">Table ${tableNumber}</div>
             <div class="qr-container">
               <img 
@@ -200,9 +200,7 @@ const TableManagement = () => {
             <div class="instructions">
               Scan to order from your table
             </div>
-            <div class="url">
-              ${baseUrl}/order/${tableNumber}
-            </div>
+            
           </div>
           <div class="no-print" style="margin-top: 20px;">
             <button onclick="window.print()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
@@ -360,13 +358,13 @@ const TableManagement = () => {
                     </div>
                     
                     <div className="table-info">
-                      <p className="table-url">
+                      {/* <p className="table-url">
                         <strong>Order URL:</strong><br />
-                        https://dapper-muffin-326944.netlify.app/order/{table.tableNumber}
-                      </p>
-                      <small className="created-date">
+                        https://scintillating-pithivier-3fc2d1.netlify.app/order/{table.tableNumber}
+                      </p> */}
+                      {/* <small className="created-date">
                         Created: {new Date(table.createdAt).toLocaleDateString()}
-                      </small>
+                      </small> */}
                     </div>
                   </div>
                 ))
