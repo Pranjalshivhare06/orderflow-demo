@@ -1020,6 +1020,85 @@ const CustomerOrder = () => {
 // }
 
 
+// const placeOrder = async () => {
+//   if (cart.length === 0) {
+//     alert('Your cart is empty. Please add items before placing an order.');
+//     return;
+//   }
+
+//   try {
+//     setLoading(true);
+    
+//     console.log('🛒 Cart items before sending:', cart);
+    
+//     // Create proper order data structure
+//     const orderData = {
+//       tableNumber: parseInt(tableNumber),
+//       customerName: customerInfo.name.trim(),
+//       mobileNumber: customerInfo.mobileNumber.trim(),
+//       items: cart.map(item => ({
+//         menuItem: item._id,
+//         name: item.name, // This already includes "(Extra Cheese)" if selected
+//         price: parseFloat(item.price),
+//         quantity: parseInt(item.quantity),
+//         isVeg: Boolean(item.isVeg),
+//         extraCheese: item.extraCheese || false,
+//         extraCheesePrice: item.extraCheese ? parseFloat(item.extraCheesePrice) : 0,
+//         itemTotal: parseFloat(item.itemTotal) || parseFloat((item.price * item.quantity) + (item.extraCheese ? item.extraCheesePrice : 0))
+//       })),
+//       // Add extra cheese total to order
+//       extraCheeseTotal: getExtraCheeseTotal(),
+//       totalAmount: getTotalAmount()
+//     };
+
+//     console.log('📦 Order data being sent:', JSON.stringify(orderData, null, 2));
+
+//     const response = await axios.post(`${API_BASE_URL}/orders`, orderData);
+    
+//     console.log('✅ Order response:', response.data);
+    
+//     if (response.data.success || response.data.orderNumber) {
+//       alert("Order Placed Successfully✅")
+//       // Clear cart and close modal
+//       setCart([]);
+//       setShowCart(false);
+      
+//       // Reset all extra cheese selections
+//       const resetSelections = {};
+//       menu.forEach(item => {
+//         if (item.canAddExtraCheese) {
+//           resetSelections[item._id] = false;
+//         }
+//       });
+//       setExtraCheeseSelections(resetSelections);
+//     } else {
+//       alert('Order failed: ' + (response.data.message || 'Unknown error'));
+//     }
+    
+//   } catch (error) {
+//     console.error('❌ Order error:', error);
+    
+//     if (error.response?.data) {
+//       console.error('❌ Backend error response:', error.response.data);
+      
+//       if (error.response.data.errors) {
+//         const errorMessages = error.response.data.errors.map(err => 
+//           `• ${err.path}: ${err.message}`
+//         ).join('\n');
+//         alert(`Validation errors:\n${errorMessages}`);
+//       } else {
+//         alert(`Error: ${error.response.data.message || error.response.data.error}`);
+//       }
+//     } else if (error.request) {
+//       alert('Network error: Could not connect to server. Please check your connection.');
+//     } else {
+//       alert('Error: ' + error.message);
+//     }
+//   } finally {
+//     setLoading(false);
+//   }
+// }
+
 const placeOrder = async () => {
   if (cart.length === 0) {
     alert('Your cart is empty. Please add items before placing an order.');
@@ -1038,24 +1117,35 @@ const placeOrder = async () => {
       mobileNumber: customerInfo.mobileNumber.trim(),
       items: cart.map(item => ({
         menuItem: item._id,
-        name: item.name, // This already includes "(Extra Cheese)" if selected
+        name: item.name,
         price: parseFloat(item.price),
         quantity: parseInt(item.quantity),
         isVeg: Boolean(item.isVeg),
         extraCheese: item.extraCheese || false,
-        extraCheesePrice: item.extraCheese ? parseFloat(item.extraCheesePrice) : 0,
-        itemTotal: parseFloat(item.itemTotal) || parseFloat((item.price * item.quantity) + (item.extraCheese ? item.extraCheesePrice : 0))
+        extraCheesePrice: item.extraCheese ? parseFloat(EXTRA_CHEESE_PRICE * item.quantity) : 0,
+        itemTotal: parseFloat(item.price * item.quantity + (item.extraCheese ? EXTRA_CHEESE_PRICE * item.quantity : 0))
       })),
       // Add extra cheese total to order
       extraCheeseTotal: getExtraCheeseTotal(),
       totalAmount: getTotalAmount()
     };
 
+    // DEBUG: Log each item's extra cheese data
+    console.log('🧀 DEBUG - Extra cheese data in order:');
+    orderData.items.forEach((item, index) => {
+      console.log(`   Item ${index + 1}: ${item.name}`);
+      console.log(`     extraCheese: ${item.extraCheese}`);
+      console.log(`     extraCheesePrice: ${item.extraCheesePrice}`);
+      console.log(`     itemTotal: ${item.itemTotal}`);
+    });
+    
     console.log('📦 Order data being sent:', JSON.stringify(orderData, null, 2));
 
     const response = await axios.post(`${API_BASE_URL}/orders`, orderData);
     
     console.log('✅ Order response:', response.data);
+    console.log('🧀 Response extra cheese check:');
+    console.log('   extraCheeseTotal:', response.data.data?.extraCheeseTotal || response.data.order?.extraCheeseTotal);
     
     if (response.data.success || response.data.orderNumber) {
       alert("Order Placed Successfully✅")
