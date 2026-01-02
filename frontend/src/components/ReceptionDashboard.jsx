@@ -1217,7 +1217,7 @@ const generateCombinedBill = async (tableNumber) => {
                   </div>
                 </div>
 
-                <div className="order-items">
+                {/* <div className="order-items">
                   <h4>Items:</h4>
                   {order.items?.map((item, index) => (
                     <div key={index} className="order-item">
@@ -1225,8 +1225,38 @@ const generateCombinedBill = async (tableNumber) => {
                       <span>₹{(item.price || 0) * (item.quantity || 1)}</span>
                     </div>
                   ))}
-                </div>
+                </div> */}
 
+                <div className="order-items">
+  <h4>Items:</h4>
+  {order.items?.map((item, index) => (
+    <div key={index} className="order-item">
+      <div className="item-details">
+        <span className="item-name-quantity">
+          {item.quantity}x {item.name || item.menuItem?.name}
+          {item.extraCheese && <span className="extra-cheese-badge">🧀 Extra Cheese</span>}
+        </span>
+        <div className="item-price-breakdown">
+          <span className="item-price">₹{item.price || 0} × {item.quantity}</span>
+          {item.extraCheese && item.extraCheesePrice > 0 && (
+            <span className="extra-cheese-price">+ ₹{item.extraCheesePrice} (Extra Cheese)</span>
+          )}
+        </div>
+      </div>
+      <span className="item-total">
+        ₹{(item.itemTotal || (item.price || 0) * (item.quantity || 1))}
+      </span>
+    </div>
+  ))}
+  
+  {/* Show extra cheese total if exists */}
+  {order.extraCheeseTotal > 0 && (
+    <div className="extra-cheese-total-row">
+      <span>Extra Cheese Total:</span>
+      <span>+ ₹{order.extraCheeseTotal}</span>
+    </div>
+  )}
+</div>
                 <div className="order-total">
                   <strong>Total: ₹{order.totalAmount || order.finalTotal}</strong>
                 </div>

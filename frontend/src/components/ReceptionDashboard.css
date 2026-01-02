@@ -989,6 +989,8 @@
   box-shadow: 0 4px 8px rgba(220,53,69,0.2);
 }
 
+
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .sidebar-menu {
@@ -1028,3 +1030,5 @@
     display: none; /* Hide connection status on very small screens */
   }
 }
+
+

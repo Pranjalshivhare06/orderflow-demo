@@ -25,7 +25,22 @@ const orderItemSchema = new mongoose.Schema({
   isVeg: {
     type: Boolean,
     default: true
+  },
+  extraCheese: {
+    type: Boolean,
+    default: false
+  },
+  extraCheesePrice: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  itemTotal: {
+    type: Number,
+    default: 0,
+    min: 0
   }
+  
 }, {
   _id: true // ✅ FIXED: Ensure subdocuments have _id
 });
@@ -75,6 +90,11 @@ const orderSchema = new mongoose.Schema({
     default: 0,
     min: 0
   },
+  extraCheeseTotal: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
   orderNumber: {
     type: String,
     unique: true,
@@ -96,6 +116,43 @@ const orderSchema = new mongoose.Schema({
 });
 
 // ✅ FIXED: Enhanced pre-save middleware with better error handling
+// orderSchema.pre('save', function(next) {
+//   try {
+//     // Calculate subtotal from items
+//     if (this.items && this.items.length > 0) {
+//       this.subtotal = this.items.reduce((total, item) => {
+//         const itemTotal = parseFloat(item.price) * parseInt(item.quantity);
+//         return total + (isNaN(itemTotal) ? 0 : itemTotal);
+//       }, 0);
+//     } else {
+//       this.subtotal = 0;
+//     }
+    
+//     // Calculate tax (5%) and total
+//     this.totalAmount = parseFloat((this.subtotal).toFixed(2));
+//     this.finalTotal = this.totalAmount;
+    
+//     // ✅ FIXED: Better order number generation with collision handling
+//     if (!this.orderNumber) {
+//       const timestamp = Date.now().toString().slice(-6);
+//       const random = Math.random().toString(36).substr(2, 4).toUpperCase();
+//       this.orderNumber = `ORD-${timestamp}-${random}`;
+      
+//       // Add a fallback in case of collision
+//       this.orderNumber = this.orderNumber + '-' + Math.random().toString(36).substr(2, 2).toUpperCase();
+//     }
+    
+//     // Update isPaid based on status
+//     this.isPaid = this.status === 'paid';
+    
+//     next();
+//   } catch (error) {
+//     console.error('❌ Error in order pre-save middleware:', error);
+//     next(error);
+//   }
+// });
+
+// ✅ FIXED: Enhanced pre-save middleware with extra cheese calculation
 orderSchema.pre('save', function(next) {
   try {
     // Calculate subtotal from items
@@ -104,12 +161,28 @@ orderSchema.pre('save', function(next) {
         const itemTotal = parseFloat(item.price) * parseInt(item.quantity);
         return total + (isNaN(itemTotal) ? 0 : itemTotal);
       }, 0);
+      
+      // ✅ CALCULATE EXTRA CHEESE TOTAL
+      this.extraCheeseTotal = this.items.reduce((total, item) => {
+        const extraCheesePrice = item.extraCheesePrice || 0;
+        return total + (isNaN(extraCheesePrice) ? 0 : extraCheesePrice);
+      }, 0);
+      
+      // ✅ CALCULATE ITEM TOTAL FOR EACH ITEM
+      this.items.forEach(item => {
+        const basePrice = parseFloat(item.price) || 0;
+        const quantity = parseInt(item.quantity) || 1;
+        const extraCheesePrice = parseFloat(item.extraCheesePrice) || 0;
+        item.itemTotal = (basePrice * quantity) + extraCheesePrice;
+      });
     } else {
       this.subtotal = 0;
+      this.extraCheeseTotal = 0;
     }
     
-    // Calculate tax (5%) and total
-    this.totalAmount = parseFloat((this.subtotal).toFixed(2));
+    // Calculate total including extra cheese
+    const totalBeforeTax = this.subtotal + this.extraCheeseTotal;
+    this.totalAmount = parseFloat(totalBeforeTax.toFixed(2));
     this.finalTotal = this.totalAmount;
     
     // ✅ FIXED: Better order number generation with collision handling
@@ -133,6 +206,27 @@ orderSchema.pre('save', function(next) {
 });
 
 // ✅ FIXED: Pre-validate middleware to ensure data integrity
+// orderSchema.pre('validate', function(next) {
+//   // Ensure items array exists and has valid data
+//   if (!this.items || !Array.isArray(this.items)) {
+//     this.items = [];
+//   }
+  
+//   // Validate each item
+//   this.items.forEach((item, index) => {
+//     if (!item.menuItem || item.menuItem.trim() === '') {
+//       item.menuItem = `temp-item-${Date.now()}-${index}`;
+//     }
+    
+//     // Ensure numeric fields are properly converted
+//     if (item.price) item.price = parseFloat(item.price);
+//     if (item.quantity) item.quantity = parseInt(item.quantity);
+//   });
+  
+//   next();
+// });
+
+// ✅ FIXED: Pre-validate middleware to ensure data integrity
 orderSchema.pre('validate', function(next) {
   // Ensure items array exists and has valid data
   if (!this.items || !Array.isArray(this.items)) {
@@ -148,10 +242,18 @@ orderSchema.pre('validate', function(next) {
     // Ensure numeric fields are properly converted
     if (item.price) item.price = parseFloat(item.price);
     if (item.quantity) item.quantity = parseInt(item.quantity);
+    if (item.extraCheesePrice) item.extraCheesePrice = parseFloat(item.extraCheesePrice);
+    if (item.itemTotal) item.itemTotal = parseFloat(item.itemTotal);
+    
+    // Ensure extraCheese is boolean
+    if (item.extraCheese !== undefined) {
+      item.extraCheese = Boolean(item.extraCheese);
+    }
   });
   
   next();
 });
+
 
 // Index for better performance
 orderSchema.index({ status: 1 });
@@ -285,13 +387,31 @@ orderSchema.statics.getRevenueStats = async function(startDate, endDate) {
 };
 
 // ✅ FIXED: Instance method to add item to order
+// orderSchema.methods.addItem = function(itemData) {
+//   const newItem = {
+//     menuItem: itemData._id || itemData.menuItem,
+//     name: itemData.name,
+//     price: parseFloat(itemData.price),
+//     quantity: parseInt(itemData.quantity),
+//     isVeg: Boolean(itemData.isVeg)
+//   };
+  
+//   this.items.push(newItem);
+//   return this.save();
+// };
+
+// ✅ FIXED: Instance method to add item to order
 orderSchema.methods.addItem = function(itemData) {
   const newItem = {
     menuItem: itemData._id || itemData.menuItem,
     name: itemData.name,
     price: parseFloat(itemData.price),
     quantity: parseInt(itemData.quantity),
-    isVeg: Boolean(itemData.isVeg)
+    isVeg: Boolean(itemData.isVeg),
+    // ✅ ADD EXTRA CHEESE FIELDS
+    extraCheese: Boolean(itemData.extraCheese),
+    extraCheesePrice: parseFloat(itemData.extraCheesePrice) || 0,
+    itemTotal: parseFloat(itemData.itemTotal) || 0
   };
   
   this.items.push(newItem);
