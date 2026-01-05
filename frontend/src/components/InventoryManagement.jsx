@@ -352,7 +352,7 @@ const InventoryManagement = () => {
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Price per Unit ($)</label>
+                    <label>Price per Unit (Rs)</label>
                     <input
                       type="number"
                       name="price"
@@ -454,7 +454,7 @@ const InventoryManagement = () => {
                         </td>
                         <td>{item.unit}</td>
                         <td>{item.minStock}</td>
-                        <td>${item.price?.toFixed(2)}</td>
+                        <td>{item.price?.toFixed(2)}</td>
                         <td>
                           <span className={`stock-status ${
                             item.quantity === 0 ? 'out-of-stock' :

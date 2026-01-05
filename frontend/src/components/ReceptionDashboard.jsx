@@ -723,6 +723,121 @@ const calculateStatsFromOrders = (ordersData) => {
   }
 
   // In your ReceptionDashboard.jsx - Update generateCombinedBill function
+// const generateCombinedBill = async (tableNumber) => {
+//   try {
+//     console.log('🧾 Generating combined bill for table:', tableNumber)
+    
+//     // FIXED: Only include orders that are NOT paid for combined billing
+//     const tableOrders = orders.filter(order => 
+//       order.tableNumber === tableNumber && 
+//       order.status !== 'cancelled' && 
+//       order.status !== 'paid'
+//     )
+
+//     if (tableOrders.length === 0) {
+//       alert(`No active (unpaid) orders found for Table ${tableNumber}`)
+//       return
+//     }
+
+//     // Combine all items
+//     const combinedItems = []
+//     let totalAmount = 0
+//     let customerName = ''
+//     let mobileNumber = ''
+
+//     tableOrders.forEach(order => {
+//       if (!customerName && order.customerName) {
+//         customerName = order.customerName
+//         mobileNumber = order.mobileNumber
+//       }
+
+//       order.items?.forEach(item => {
+//         const itemName = item.name || item.menuItem?.name || 'Item'
+//         const itemPrice = item.price || 0
+//         const itemQuantity = item.quantity || 1
+        
+//         const existingItem = combinedItems.find(combinedItem => 
+//           combinedItem.name === itemName && combinedItem.price === itemPrice
+//         )
+
+//         if (existingItem) {
+//           existingItem.quantity += itemQuantity
+//         } else {
+//           combinedItems.push({
+//             name: itemName,
+//             price: itemPrice,
+//             quantity: itemQuantity,
+//             isVeg: item.isVeg
+//           })
+//         }
+//       })
+
+//       totalAmount += order.totalAmount || order.finalTotal || 0
+//     })
+
+//     const taxAmount = totalAmount * 0.05
+//     const finalTotal = totalAmount
+//     const combinedBillNumber = `CB-${tableNumber}-${Date.now()}`
+
+//     // Create combined order object
+//     const combinedOrder = {
+//       orderNumber: combinedBillNumber,
+//       tableNumber: tableNumber,
+//       customerName: customerName || 'Walk-in Customer',
+//       mobileNumber: mobileNumber || 'N/A',
+//       items: combinedItems,
+//       totalAmount: totalAmount,
+//       taxAmount: taxAmount,
+//       finalTotal: finalTotal,
+//       createdAt: new Date().toISOString(),
+//       isCombinedBill: true,
+//       originalOrders: tableOrders.map(order => order.orderNumber)
+//     }
+
+//     console.log('📊 Combined bill details:', combinedOrder)
+
+//     // 1. Save combined bill to database
+//     try {
+//       const saveResponse = await axios.post(`${API_BASE_URL}/combined-bills`, {
+//         combinedBillNumber,
+//         tableNumber,
+//         customerName: customerName || 'Walk-in Customer',
+//         mobileNumber: mobileNumber || 'N/A',
+//         items: combinedItems,
+//         totalAmount,
+//         taxAmount,
+//         finalTotal,
+//         originalOrders: tableOrders.map(order => ({
+//           orderNumber: order.orderNumber,
+//           orderId: order._id
+//         })),
+//         generatedBy: 'Reception Dashboard',
+//         paymentMethod: 'combined'
+//       })
+      
+//       console.log('✅ Combined bill saved:', saveResponse.data)
+//     } catch (error) {
+//       console.error('❌ Error saving combined bill:', error)
+//       // Continue even if saving fails
+//     }
+
+//     // 2. Print combined bill
+//     printThermalBill(combinedOrder)
+
+//     // 3. Mark all original orders as PAID after printing bill
+//     tableOrders.forEach(order => {
+//       updateOrderStatus(order.orderNumber, 'paid')
+//     })
+
+//     // 4. Show success message
+//     alert(`Combined bill generated for Table ${tableNumber}! All orders marked as paid. Bill saved for admin records.`)
+
+//   } catch (error) {
+//     console.error('❌ Error generating combined bill:', error)
+//     alert('Error generating combined bill: ' + error.message)
+//   }
+// }
+
 const generateCombinedBill = async (tableNumber) => {
   try {
     console.log('🧾 Generating combined bill for table:', tableNumber)
@@ -739,9 +854,22 @@ const generateCombinedBill = async (tableNumber) => {
       return
     }
 
-    // Combine all items
+    // Debug: Log all orders being combined
+    console.log(`🔍 Combining ${tableOrders.length} orders for Table ${tableNumber}:`);
+    tableOrders.forEach(order => {
+      console.log(`   Order #${order.orderNumber}:`);
+      console.log(`     Total Amount: ${order.totalAmount}`);
+      console.log(`     Final Total: ${order.finalTotal}`);
+      console.log(`     Extra Cheese Total: ${order.extraCheeseTotal || 0}`);
+      order.items?.forEach(item => {
+        console.log(`     Item: ${item.name} - Extra Cheese: ${item.extraCheese}, Price: ${item.extraCheesePrice}`);
+      });
+    });
+
+    // Combine all items with proper extra cheese handling
     const combinedItems = []
     let totalAmount = 0
+    let extraCheeseTotal = 0
     let customerName = ''
     let mobileNumber = ''
 
@@ -751,42 +879,88 @@ const generateCombinedBill = async (tableNumber) => {
         mobileNumber = order.mobileNumber
       }
 
+      // Add extra cheese total from order level
+      if (order.extraCheeseTotal) {
+        extraCheeseTotal += parseFloat(order.extraCheeseTotal)
+      }
+
       order.items?.forEach(item => {
         const itemName = item.name || item.menuItem?.name || 'Item'
         const itemPrice = item.price || 0
         const itemQuantity = item.quantity || 1
+        const itemExtraCheese = item.extraCheese || false
+        const itemExtraCheesePrice = item.extraCheesePrice || 0
+        
+        // Create a unique key that includes extra cheese status
+        const itemKey = `${itemName}-${itemPrice}-${itemExtraCheese}`
         
         const existingItem = combinedItems.find(combinedItem => 
-          combinedItem.name === itemName && combinedItem.price === itemPrice
+          combinedItem.key === itemKey
         )
 
         if (existingItem) {
           existingItem.quantity += itemQuantity
+          existingItem.extraCheesePrice += itemExtraCheesePrice
         } else {
           combinedItems.push({
+            key: itemKey,
             name: itemName,
             price: itemPrice,
             quantity: itemQuantity,
-            isVeg: item.isVeg
+            isVeg: item.isVeg,
+            extraCheese: itemExtraCheese,
+            extraCheesePrice: itemExtraCheesePrice
           })
         }
       })
 
-      totalAmount += order.totalAmount || order.finalTotal || 0
+      // Use the order's finalTotal if available, otherwise use totalAmount
+      const orderAmount = order.finalTotal || order.totalAmount || 0
+      totalAmount += parseFloat(orderAmount)
     })
 
-    const taxAmount = totalAmount * 0.05
-    const finalTotal = totalAmount
+    // Calculate the subtotal from items (base prices only)
+    const subtotal = combinedItems.reduce((sum, item) => {
+      return sum + (item.price * item.quantity)
+    }, 0)
+
+    // Calculate total extra cheese price from items
+    const itemsExtraCheeseTotal = combinedItems.reduce((sum, item) => {
+      return sum + (item.extraCheesePrice || 0)
+    }, 0)
+
+    // Use whichever extra cheese total is available
+    const finalExtraCheeseTotal = extraCheeseTotal > 0 ? extraCheeseTotal : itemsExtraCheeseTotal
+    
+    // Final total calculation
+    const finalTotal = subtotal + finalExtraCheeseTotal
+
+    console.log('🧮 Combined Bill Calculation:');
+    console.log(`   Subtotal (base items): ${subtotal}`);
+    console.log(`   Extra Cheese Total: ${finalExtraCheeseTotal}`);
+    console.log(`   Final Total: ${finalTotal}`);
+
+    const taxAmount = finalTotal * 0.05
     const combinedBillNumber = `CB-${tableNumber}-${Date.now()}`
 
-    // Create combined order object
+    // Create combined order object with all necessary fields
     const combinedOrder = {
       orderNumber: combinedBillNumber,
       tableNumber: tableNumber,
       customerName: customerName || 'Walk-in Customer',
       mobileNumber: mobileNumber || 'N/A',
-      items: combinedItems,
-      totalAmount: totalAmount,
+      items: combinedItems.map(item => ({
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        isVeg: item.isVeg,
+        extraCheese: item.extraCheese,
+        extraCheesePrice: item.extraCheesePrice,
+        itemTotal: (item.price * item.quantity) + (item.extraCheesePrice || 0)
+      })),
+      subtotal: subtotal,
+      extraCheeseTotal: finalExtraCheeseTotal,
+      totalAmount: finalTotal,
       taxAmount: taxAmount,
       finalTotal: finalTotal,
       createdAt: new Date().toISOString(),
@@ -803,10 +977,19 @@ const generateCombinedBill = async (tableNumber) => {
         tableNumber,
         customerName: customerName || 'Walk-in Customer',
         mobileNumber: mobileNumber || 'N/A',
-        items: combinedItems,
-        totalAmount,
-        taxAmount,
-        finalTotal,
+        items: combinedItems.map(item => ({
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          isVeg: item.isVeg,
+          extraCheese: item.extraCheese,
+          extraCheesePrice: item.extraCheesePrice
+        })),
+        subtotal: subtotal,
+        extraCheeseTotal: finalExtraCheeseTotal,
+        totalAmount: finalTotal,
+        taxAmount: taxAmount,
+        finalTotal: finalTotal,
         originalOrders: tableOrders.map(order => ({
           orderNumber: order.orderNumber,
           orderId: order._id
@@ -857,195 +1040,7 @@ const generateCombinedBill = async (tableNumber) => {
     }
   }
 
-  // Thermal bill printing function
-  // const printThermalBill = (order) => {
-  //   try {
-  //     const printWindow = window.open('', '_blank', 'width=320,height=600,scrollbars=no,toolbar=no,location=no')
-      
-  //     printWindow.document.write(`
-  //       <!DOCTYPE html>
-  //       <html>
-  //       <head>
-  //         <title>Bill - ${order.orderNumber}</title>
-  //         <style>
-  //           @media print {
-  //             body { 
-  //               margin: 0; 
-  //               padding: 0; 
-  //               font-family: 'Courier New', monospace;
-  //               font-size: 12px;
-  //               width: 80mm;
-  //               background: white;
-  //             }
-  //             .no-print { display: none !important; }
-  //           }
-  //           @media screen {
-  //             body { 
-  //               font-family: 'Courier New', monospace;
-  //               font-size: 14px;
-  //               padding: 20px;
-  //               background: #f5f5f5;
-  //             }
-  //             .bill-container {
-  //               background: white;
-  //               padding: 20px;
-  //               border-radius: 8px;
-  //               box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  //               max-width: 300px;
-  //               margin: 0 auto;
-  //             }
-  //           }
-  //           .bill-header {
-  //             text-align: center;
-  //             border-bottom: 2px dashed #000;
-  //             padding-bottom: 10px;
-  //             margin-bottom: 10px;
-  //           }
-  //           .restaurant-name {
-  //             font-weight: bold;
-  //             font-size: 18px;
-  //             margin: 5px 0;
-  //           }
-  //           .bill-info {
-  //             margin: 10px 0;
-  //           }
-  //           .bill-info div {
-  //             margin: 3px 0;
-  //           }
-  //           .items-table {
-  //             width: 100%;
-  //             border-collapse: collapse;
-  //             margin: 10px 0;
-  //           }
-  //           .items-table th {
-  //             text-align: left;
-  //             border-bottom: 1px dashed #000;
-  //             padding: 5px 0;
-  //           }
-  //           .items-table td {
-  //             padding: 3px 0;
-  //             border-bottom: 1px dotted #ccc;
-  //           }
-  //           .total-section {
-  //             border-top: 2px dashed #000;
-  //             margin-top: 10px;
-  //             padding-top: 10px;
-  //           }
-  //           .total-row {
-  //             display: flex;
-  //             justify-content: space-between;
-  //             margin: 5px 0;
-  //           }
-  //           .final-total {
-  //             font-weight: bold;
-  //             font-size: 16px;
-  //           }
-  //           .footer {
-  //             text-align: center;
-  //             margin-top: 20px;
-  //             font-style: italic;
-  //             border-top: 1px dashed #000;
-  //             padding-top: 10px;
-  //           }
-  //           .print-btn {
-  //             background: #007bff;
-  //             color: white;
-  //             border: none;
-  //             padding: 10px 20px;
-  //             border-radius: 5px;
-  //             cursor: pointer;
-  //             margin: 10px 5px;
-  //           }
-  //           .close-btn {
-  //             background: #6c757d;
-  //             color: white;
-  //             border: none;
-  //             padding: 10px 20px;
-  //             border-radius: 5px;
-  //             cursor: pointer;
-  //             margin: 10px 5px;
-  //           }
-  //         </style>
-  //       </head>
-  //       <body>
-  //         <div class="bill-container">
-  //           <div class="bill-header">
-  //             <div class="restaurant-name">The Chai Cartel</div>
-  //             <div>-----------</div>
-  //           </div>
-            
-  //           <div class="bill-info">
-  //             <div><strong>Date:</strong> ${new Date(order.createdAt).toLocaleDateString('en-IN')}</div>
-  //             <div><strong>Time:</strong> ${new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</div>
-  //             <div><strong>Table:</strong> ${order.tableNumber}</div>
-  //             <div><strong>Customer:</strong> ${order.customerName || 'Walk-in'}</div>
-  //             ${order.mobileNumber ? `<div><strong>Mobile:</strong> ${order.mobileNumber}</div>` : ''}
-  //           </div>
-            
-  //           <table class="items-table">
-  //             <thead>
-  //               <tr>
-  //                 <th>Qty</th>
-  //                 <th>Item</th>
-  //                 <th>Amount</th>
-  //               </tr>
-  //             </thead>
-  //             <tbody>
-  //               ${order.items?.map(item => {
-  //                 const itemName = item.name || item.menuItem?.name || 'Item'
-  //                 const quantity = item.quantity || 1
-  //                 const price = item.price || 0
-  //                 const total = price * quantity
-  //                 return `
-  //                   <tr>
-  //                     <td>${quantity}</td>
-  //                     <td>${itemName}</td>
-  //                     <td>₹${total}</td>
-  //                   </tr>
-  //                   <tr>
-  //                     <td></td>
-  //                     <td colspan="2" style="font-size: 10px; color: #666;">₹${price} x ${quantity}</td>
-  //                   </tr>
-  //                 `
-  //               }).join('')}
-  //             </tbody>
-  //           </table>
-            
-  //           <div class="total-section">
-  //             <div class="total-row">
-  //               <span>Subtotal:</span>
-  //               <span>₹${(order.totalAmount || 0).toFixed(2)}</span>
-  //             </div>
-              
-  //             <div class="total-row final-total">
-  //               <span>TOTAL:</span>
-  //               <span>₹${(order.finalTotal || order.totalAmount || 0).toFixed(2)}</span>
-  //             </div>
-  //           </div>
-            
-  //           <div class="footer">
-  //             <div>Thank you for visiting!</div>
-  //             <div>We hope to see you again soon</div>
-  //           </div>
-            
-  //           <div class="no-print" style="text-align: center; margin-top: 20px;">
-  //             <button class="print-btn" onclick="window.print()">🖨 Print Bill</button>
-  //             <button class="close-btn" onclick="window.close()">Close</button>
-  //           </div>
-  //         </div>
-  //       </body>
-  //       </html>
-  //     `)
-      
-  //     printWindow.document.close()
-      
-  //   } catch (error) {
-  //     console.error('❌ Error printing bill:', error)
-  //     alert('Error opening print window: ' + error.message)
-  //   }
-  // }
-
-  // Thermal bill printing function
+// Thermal bill printing function
 // const printThermalBill = (order) => {
 //   try {
 //     const printWindow = window.open('', '_blank', 'width=320,height=600,scrollbars=no,toolbar=no,location=no')
@@ -1058,9 +1053,13 @@ const generateCombinedBill = async (tableNumber) => {
 //     const itemsWithTotals = order.items?.map(item => {
 //       const itemName = item.name || item.menuItem?.name || 'Item'
 //       const quantity = item.quantity || 1
-//       const price = item.price || 0
-//       const extraCheesePrice = item.extraCheesePrice || 0
+//       const price = parseFloat(item.price) || 0
+//       const extraCheesePrice = parseFloat(item.extraCheesePrice) || 0
 //       const itemTotal = (price * quantity) + extraCheesePrice
+      
+//       console.log(`🧮 Item calculation: ${itemName}`);
+//       console.log(`   Price: ${price}, Quantity: ${quantity}, Extra Cheese: ${extraCheesePrice}`);
+//       console.log(`   Item Total: ${itemTotal}`);
       
 //       subtotal += price * quantity;
 //       extraCheeseTotal += extraCheesePrice;
@@ -1077,6 +1076,11 @@ const generateCombinedBill = async (tableNumber) => {
     
 //     const totalAmount = subtotal + extraCheeseTotal;
 //     const finalTotal = totalAmount;
+    
+//     console.log('🧾 Bill Calculation Summary:');
+//     console.log(`   Subtotal: ${subtotal}`);
+//     console.log(`   Extra Cheese Total: ${extraCheeseTotal}`);
+//     console.log(`   Final Total: ${finalTotal}`);
     
 //     printWindow.document.write(`
 //       <!DOCTYPE html>
@@ -1140,11 +1144,15 @@ const generateCombinedBill = async (tableNumber) => {
 //           }
 //           .items-table td {
 //             padding: 3px 0;
-//             border-bottom: 1px dotted #ccc;
+//             vertical-align: top;
 //           }
-//           .extra-cheese-row {
-//             color: #27ae60;
+//           .item-details {
 //             font-size: 11px;
+//             color: #666;
+//           }
+//           .extra-cheese-detail {
+//             color: #27ae60;
+//             font-weight: bold;
 //           }
 //           .total-section {
 //             border-top: 2px dashed #000;
@@ -1156,9 +1164,16 @@ const generateCombinedBill = async (tableNumber) => {
 //             justify-content: space-between;
 //             margin: 5px 0;
 //           }
+//           .extra-cheese-row {
+//             color: #27ae60;
+//             font-weight: bold;
+//           }
 //           .final-total {
 //             font-weight: bold;
 //             font-size: 16px;
+//             border-top: 1px solid #000;
+//             padding-top: 5px;
+//             margin-top: 5px;
 //           }
 //           .footer {
 //             text-align: center;
@@ -1212,17 +1227,20 @@ const generateCombinedBill = async (tableNumber) => {
 //             </thead>
 //             <tbody>
 //               ${itemsWithTotals.map(item => {
+//                 const hasExtraCheese = item.extraCheesePrice > 0;
 //                 return `
 //                   <tr>
 //                     <td>${item.quantity}</td>
-//                     <td>${item.name}${item.hasExtraCheese ? '<br><small style="color:#27ae60;">+ Extra Cheese</small>' : ''}</td>
+//                     <td>
+//                       ${item.name}
+//                       ${hasExtraCheese ? '<div class="extra-cheese-detail">+ Extra Cheese</div>' : ''}
+//                     </td>
 //                     <td>₹${item.itemTotal.toFixed(2)}</td>
 //                   </tr>
-//                   <tr class="extra-cheese-row">
+//                   <tr>
 //                     <td></td>
-//                     <td colspan="2">
-//                       ₹${item.price} x ${item.quantity}
-//                       ${item.hasExtraCheese ? `<br>+ ₹${item.extraCheesePrice} (Extra Cheese)` : ''}
+//                     <td colspan="2" class="item-details">
+//                       ₹${item.price.toFixed(2)} × ${item.quantity}
 //                     </td>
 //                   </tr>
 //                 `
@@ -1231,17 +1249,9 @@ const generateCombinedBill = async (tableNumber) => {
 //           </table>
           
 //           <div class="total-section">
-//             <div class="total-row">
-//               <span>Subtotal:</span>
-//               <span>₹${subtotal.toFixed(2)}</span>
-//             </div>
             
-//             ${extraCheeseTotal > 0 ? `
-//               <div class="total-row" style="color: #27ae60;">
-//                 <span>Extra Cheese:</span>
-//                 <span>+ ₹${extraCheeseTotal.toFixed(2)}</span>
-//               </div>
-//             ` : ''}
+            
+            
             
 //             <div class="total-row final-total">
 //               <span>TOTAL:</span>
@@ -1251,7 +1261,6 @@ const generateCombinedBill = async (tableNumber) => {
           
 //           <div class="footer">
 //             <div>Thank you for visiting!</div>
-//             <div>We hope to see you again soon</div>
 //           </div>
           
 //           <div class="no-print" style="text-align: center; margin-top: 20px;">
@@ -1271,10 +1280,9 @@ const generateCombinedBill = async (tableNumber) => {
 //   }
 // }
 
-// Thermal bill printing function
 const printThermalBill = (order) => {
   try {
-    const printWindow = window.open('', '_blank', 'width=320,height=600,scrollbars=no,toolbar=no,location=no')
+    const printWindow = window.open('', '_blank', 'width=280,height=600,scrollbars=no,toolbar=no,location=no')
     
     // Calculate totals including extra cheese
     let subtotal = 0;
@@ -1320,116 +1328,218 @@ const printThermalBill = (order) => {
         <title>Bill - ${order.orderNumber}</title>
         <style>
           @media print {
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
             body { 
               margin: 0; 
               padding: 0; 
               font-family: 'Courier New', monospace;
-              font-size: 12px;
-              width: 80mm;
+              font-size: 11px;
+              width: 70mm;
+              max-width: 70mm;
               background: white;
+              font-weight: bold !important;
             }
             .no-print { display: none !important; }
           }
           @media screen {
             body { 
               font-family: 'Courier New', monospace;
-              font-size: 14px;
-              padding: 20px;
+              font-size: 12px;
+              padding: 10px;
               background: #f5f5f5;
+              font-weight: bold;
             }
             .bill-container {
               background: white;
-              padding: 20px;
-              border-radius: 8px;
-              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-              max-width: 300px;
+              padding: 10px;
+              border-radius: 4px;
+              box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+              max-width: 250px;
               margin: 0 auto;
             }
           }
+          
+          /* Ultra-compact bill styles for narrow thermal printers */
+          .bill-container {
+            padding: 4px;
+            width: 70mm;
+            max-width: 70mm;
+            font-weight: bold;
+          }
+          
           .bill-header {
             text-align: center;
-            border-bottom: 2px dashed #000;
-            padding-bottom: 10px;
-            margin-bottom: 10px;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 4px;
+            margin-bottom: 4px;
           }
+          
           .restaurant-name {
             font-weight: bold;
-            font-size: 18px;
-            margin: 5px 0;
+            font-size: 14px;
+            margin: 1px 0;
+            letter-spacing: 0.5px;
           }
+          
           .bill-info {
-            margin: 10px 0;
+            margin: 4px 0;
+            font-size: 10px;
+            line-height: 1.2;
           }
+          
           .bill-info div {
-            margin: 3px 0;
+            margin: 1px 0;
           }
+          
           .items-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 10px 0;
+            margin: 4px 0;
+            table-layout: fixed;
           }
+          
           .items-table th {
             text-align: left;
             border-bottom: 1px dashed #000;
-            padding: 5px 0;
-          }
-          .items-table td {
-            padding: 3px 0;
-            vertical-align: top;
-          }
-          .item-details {
-            font-size: 11px;
-            color: #666;
-          }
-          .extra-cheese-detail {
-            color: #27ae60;
+            padding: 3px 1px;
+            font-size: 10px;
             font-weight: bold;
           }
-          .total-section {
-            border-top: 2px dashed #000;
-            margin-top: 10px;
-            padding-top: 10px;
+          
+          .items-table td {
+            padding: 2px 1px;
+            vertical-align: top;
+            font-size: 10px;
+            line-height: 1.1;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            font-weight: bold;
           }
+          
+          /* Ultra-compact column widths */
+          .items-table th:nth-child(1), 
+          .items-table td:nth-child(1) {
+            width: 12%;
+            min-width: 12%;
+            max-width: 12%;
+            text-align: left;
+          }
+          
+          .items-table th:nth-child(2), 
+          .items-table td:nth-child(2) {
+            width: 58%;
+            min-width: 58%;
+            max-width: 58%;
+            text-align: left;
+            padding-right: 2px;
+          }
+          
+          .items-table th:nth-child(3), 
+          .items-table td:nth-child(3) {
+            width: 30%;
+            min-width: 30%;
+            max-width: 30%;
+            text-align: right;
+          }
+          
+          .item-name {
+            display: block;
+            line-height: 1.1;
+            font-weight: bold;
+          }
+          
+          .extra-cheese-detail {
+            color: #000;
+            font-weight: bold;
+            font-size: 9px;
+            display: block;
+            margin-top: 0;
+          }
+          
+          .item-details-row {
+            font-size: 9px;
+            color: #000;
+            font-weight: bold;
+          }
+          
+          .item-details-row td {
+            padding-top: 0;
+            padding-bottom: 2px;
+            border-bottom: 1px dotted #ccc;
+          }
+          
+          .price-details {
+            font-size: 9px;
+            color: #000;
+            font-weight: bold;
+          }
+          
+          .total-section {
+            border-top: 1px dashed #000;
+            margin-top: 6px;
+            padding-top: 4px;
+          }
+          
           .total-row {
             display: flex;
             justify-content: space-between;
-            margin: 5px 0;
-          }
-          .extra-cheese-row {
-            color: #27ae60;
+            margin: 2px 0;
+            font-size: 11px;
             font-weight: bold;
           }
+          
+          .extra-cheese-row {
+            color: #000;
+            font-weight: bold;
+          }
+          
           .final-total {
             font-weight: bold;
-            font-size: 16px;
+            font-size: 13px;
             border-top: 1px solid #000;
-            padding-top: 5px;
-            margin-top: 5px;
+            padding-top: 3px;
+            margin-top: 3px;
           }
+          
           .footer {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 6px;
             font-style: italic;
+            font-size: 9px;
             border-top: 1px dashed #000;
-            padding-top: 10px;
+            padding-top: 4px;
+            font-weight: bold;
           }
+          
           .print-btn {
             background: #007bff;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 8px 16px;
+            border-radius: 3px;
             cursor: pointer;
-            margin: 10px 5px;
+            margin: 8px 4px;
+            font-weight: bold;
           }
+          
           .close-btn {
             background: #6c757d;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 8px 16px;
+            border-radius: 3px;
             cursor: pointer;
-            margin: 10px 5px;
+            margin: 8px 4px;
+            font-weight: bold;
+          }
+          
+          /* Make ALL text bold */
+          body, div, span, td, th, p, h1, h2, h3, h4 {
+            font-weight: bold !important;
           }
         </style>
       </head>
@@ -1437,15 +1547,16 @@ const printThermalBill = (order) => {
         <div class="bill-container">
           <div class="bill-header">
             <div class="restaurant-name">The Chai Cartel</div>
-            <div>-----------</div>
+            <div style="font-size: 9px;">-------------------------------</div>
           </div>
           
           <div class="bill-info">
-            <div><strong>Date:</strong> ${new Date(order.createdAt).toLocaleDateString('en-IN')}</div>
-            <div><strong>Time:</strong> ${new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</div>
-            <div><strong>Table:</strong> ${order.tableNumber}</div>
-            <div><strong>Customer:</strong> ${order.customerName || 'Walk-in'}</div>
-            ${order.mobileNumber ? `<div><strong>Mobile:</strong> ${order.mobileNumber}</div>` : ''}
+            <div>Date: ${new Date(order.createdAt).toLocaleDateString('en-IN')}</div>
+            <div>Time: ${new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</div>
+            <div>Table: ${order.tableNumber}</div>
+            <div>Customer: ${order.customerName || 'Walk-in'}</div>
+            ${order.mobileNumber ? `<div>Mobile: ${order.mobileNumber}</div>` : ''}
+            <div style="margin-top: 3px; border-bottom: 1px dashed #000; padding-bottom: 3px;"></div>
           </div>
           
           <table class="items-table">
@@ -1459,39 +1570,27 @@ const printThermalBill = (order) => {
             <tbody>
               ${itemsWithTotals.map(item => {
                 const hasExtraCheese = item.extraCheesePrice > 0;
+                const itemName = item.name.length > 20 ? item.name.substring(0, 18) + '...' : item.name;
+                
                 return `
                   <tr>
                     <td>${item.quantity}</td>
                     <td>
-                      ${item.name}
-                      ${hasExtraCheese ? '<div class="extra-cheese-detail">+ Extra Cheese</div>' : ''}
+                      <span class="item-name">${itemName}</span>
+                      ${hasExtraCheese ? '<span class="extra-cheese-detail">+ Extra Cheese</span>' : ''}
                     </td>
                     <td>₹${item.itemTotal.toFixed(2)}</td>
                   </tr>
-                  <tr>
-                    <td></td>
-                    <td colspan="2" class="item-details">
-                      ₹${item.price.toFixed(2)} × ${item.quantity}
-                      ${hasExtraCheese ? `<br><span class="extra-cheese-detail">+ ₹${item.extraCheesePrice.toFixed(2)} (Extra Cheese)</span>` : ''}
-                    </td>
-                  </tr>
+                  
                 `
               }).join('')}
             </tbody>
           </table>
           
           <div class="total-section">
-            <div class="total-row">
-              <span>Subtotal:</span>
-              <span>₹${subtotal.toFixed(2)}</span>
-            </div>
             
-            ${extraCheeseTotal > 0 ? `
-              <div class="total-row extra-cheese-row">
-                <span>Extra Cheese:</span>
-                <span>+ ₹${extraCheeseTotal.toFixed(2)}</span>
-              </div>
-            ` : ''}
+            
+            
             
             <div class="total-row final-total">
               <span>TOTAL:</span>
@@ -1501,10 +1600,9 @@ const printThermalBill = (order) => {
           
           <div class="footer">
             <div>Thank you for visiting!</div>
-            <div>We hope to see you again soon</div>
           </div>
           
-          <div class="no-print" style="text-align: center; margin-top: 20px;">
+          <div class="no-print" style="text-align: center; margin-top: 10px;">
             <button class="print-btn" onclick="window.print()">🖨 Print Bill</button>
             <button class="close-btn" onclick="window.close()">Close</button>
           </div>
@@ -1887,15 +1985,6 @@ const printThermalBill = (order) => {
                   </div>
                 </div>
 
-                {/* <div className="order-items">
-                  <h4>Items:</h4>
-                  {order.items?.map((item, index) => (
-                    <div key={index} className="order-item">
-                      <span>{item.quantity}x {item.name || item.menuItem?.name}</span>
-                      <span>₹{(item.price || 0) * (item.quantity || 1)}</span>
-                    </div>
-                  ))}
-                </div> */}
 
                 <div className="order-items">
   <h4>Items:</h4>

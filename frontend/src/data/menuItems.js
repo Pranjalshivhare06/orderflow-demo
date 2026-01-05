@@ -2493,7 +2493,7 @@ const menuItems = [
   },
 {
     id: 91,
-    name: "Classic Margherita Small",
+    name: "Classic Margherita S",
     category: "Pizza",
     price: 99,
     description: "Fresh mozzarella.basil leave, tomato sauce, olive oil",
@@ -2505,7 +2505,7 @@ const menuItems = [
   },
 {
     id: 92,
-    name: "Classic Margherita Large",
+    name: "Classic Margherita L",
     category: "Pizza",
     price: 129,
     description: "Fresh mozzarella.basil leave, tomato sauce, olive oil",
@@ -2517,7 +2517,7 @@ const menuItems = [
   },
 {
     id: 93,
-    name: "3 Topping Pizza Small",
+    name: "3 Topping Pizza S",
     category: "Pizza",
     price: 129,
     description: "Onion,Capsicum,Sweet Corn",
@@ -2529,7 +2529,7 @@ const menuItems = [
   },
 {
     id: 94,
-    name: "3 Topping Pizza Large",
+    name: "3 Topping Pizza L",
     category: "Pizza",
     price: 159,
     description: "Onion,Capsicum,Sweet Corn",
@@ -2541,7 +2541,7 @@ const menuItems = [
   },
 {
     id: 95,
-    name: "BBQ Veggie Pizza Small",
+    name: "BBQ Veggie Pizza S",
     category: "Pizza",
     price: 139,
     description: "Smoky BBQ sauce, Onion , Capsicum, Mushroom, Sweet Corn",
@@ -2553,7 +2553,7 @@ const menuItems = [
   },
 {
     id: 96,
-    name: "BBQ Veggie Pizza Large",
+    name: "BBQ Veggie Pizza L",
     category: "Pizza",
     price: 169,
     description: "Smoky BBQ sauce, Onion , Capsicum, Mushroom, Sweet Corn",
@@ -2565,7 +2565,7 @@ const menuItems = [
   },
 {
     id: 97,
-    name: "Farm Fresh Pizza Small",
+    name: "Farm Fresh Pizza S",
     category: "Pizza",
     price: 149,
     description: "Fresh Tomato Crisp Capsicum Juicy Mushroom Sweet Corn Black Olives",
@@ -2577,7 +2577,7 @@ const menuItems = [
   },
 {
     id: 98,
-    name: "Farm Fresh Pizza Large",
+    name: "Farm Fresh Pizza L",
     category: "Pizza",
     price: 189,
     description: "Fresh Tomato Crisp Capsicum Juicy Mushroom Sweet Corn Black Olives",
@@ -2589,7 +2589,7 @@ const menuItems = [
   },
 {
     id: 99,
-    name: "Veggie Extra Veganza Small",
+    name: "Veggie Extra Veganza S",
     category: "Pizza",
     price: 169,
     description: "Onion, Capsicum, Mushroom, Tomato,Black Olives, Sweet Corn, Jalapenos",
@@ -2601,7 +2601,7 @@ const menuItems = [
   },
 {
     id: 100,
-    name: "Veggie Extra Vaganza Large",
+    name: "Veggie Extra Vaganza L",
     category: "Pizza",
     price: 209,
     description: "Onion, Capsicum, Mushroom, Tomato,Black Olives, Sweet Corn, Jalapenos",
@@ -2613,7 +2613,7 @@ const menuItems = [
   },
 {
     id: 101,
-    name: "Smoke Veggie Sausage Small",
+    name: "Smoke Veggie Sausage S",
     category: "Pizza",
     price: 169,
     description: "Smoked Veggie Sausage, Onion , Capsicum, Mushroom, Mozzarella Cheese",
@@ -2625,7 +2625,7 @@ const menuItems = [
   },
 {
     id: 102,
-    name: "Smoke Veggie Sausage Large",
+    name: "Smoke Veggie Sausage L",
     category: "Pizza",
     price: 219,
     description: "Smoked Veggie Sausage, Onion , Capsicum, Mushroom, Mozzarella Cheese",
@@ -2637,7 +2637,7 @@ const menuItems = [
   },
 {
     id: 103,
-    name: "TCC Special Pizza Small",
+    name: "TCC Special Pizza S",
     category: "Pizza",
     price: 199,
     description: "Paneer, Onion , Jalpanenos, Black Pepper",
@@ -2649,7 +2649,7 @@ const menuItems = [
   },
 {
     id: 104,
-    name: "TCC Special Pizza Large",
+    name: "TCC Special Pizza L",
     category: "Pizza",
     price: 259,
     description: "Paneer, Onion , Jalpanenos, Black Pepper",
@@ -2661,10 +2661,10 @@ const menuItems = [
   },
 {
     id: 105,
-    name: "4 Cheeze Pizza Small",
+    name: "4 Cheeze Pizza S",
     category: "Pizza",
     price: 189,
-    description: "Smoked Veggie Sausage, Onion, Capsicum,Mushroom, Mozzerella Cheese",
+    description: "Mozzerella, cheddar, Parmesan, Ricotta",
     image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSOe4gkt9xzHcN5QeJwi92SG5iaWi-Rr_oKQ&s",
     ingredients: ["brownie pieces", "vanilla ice cream", "chocolate sauce", "whipped cream", "cherry"],
     preparationTime: 20,
@@ -2673,10 +2673,10 @@ const menuItems = [
   },
 {
     id: 106,
-    name: "4 Cheeze Pizza Large",
+    name: "4 Cheeze Pizza L",
     category: "Pizza",
     price: 249,
-    description: "Smoked Veggie Sausage, Onion, Capsicum,Mushroom, Mozzerella Cheese",
+    description: "Mozzerella, cheddar, Parmesan, Ricotta",
     image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSOe4gkt9xzHcN5QeJwi92SG5iaWi-Rr_oKQ&s",
     ingredients: ["brownie pieces", "vanilla ice cream", "chocolate sauce", "whipped cream", "cherry"],
     preparationTime: 20,
@@ -2685,7 +2685,7 @@ const menuItems = [
   },
 {
     id: 107,
-    name: "All time four Small",
+    name: "All time four S",
     category: "Pizza",
     price: 119,
     image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTO_heFcze0URbPb7Oh_KP4HQBiA8PGo9wZ4w&s",
@@ -2696,7 +2696,7 @@ const menuItems = [
   },
 {
     id: 108,
-    name: "All time four Large",
+    name: "All time four L",
     category: "Pizza",
     price: 129,
     image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTO_heFcze0URbPb7Oh_KP4HQBiA8PGo9wZ4w&s",
@@ -2707,7 +2707,7 @@ const menuItems = [
   },
 {
     id: 109,
-    name: "Pizza Banka(white Sausage) Small ",
+    name: "Pizza Banka(white Sausage) S",
     category: "Pizza",
     price: 119,
     description: "Onion,Garlic,Chilli,TomatoGarlic Sliged",
@@ -2719,7 +2719,7 @@ const menuItems = [
   },
 {
     id: 110,
-    name: "Pizza Banka(white Sausage) Large ",
+    name: "Pizza Banka(white Sausage) L",
     category: "Pizza",
     price: 129,
     description: "Onion,Garlic,Chilli,TomatoGarlic Sliged",
@@ -2731,7 +2731,7 @@ const menuItems = [
   },
 {
     id: 111,
-    name: "Water Bottle (small)",
+    name: "Water Bottle S",
     category: "Water",
     price: 10,
     description: "Onion,Garlic,Chilli,TomatoGarlic Sliged",
@@ -2742,7 +2742,7 @@ const menuItems = [
     isAvailable: true
   },{
     id: 112,
-    name: "Water Bottle (large)",
+    name: "Water Bottle L",
     category: "Water",
     price: 20,
     description: "Onion,Garlic,Chilli,TomatoGarlic Sliged",
