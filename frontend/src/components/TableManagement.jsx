@@ -109,7 +109,8 @@ const TableManagement = () => {
   // QR code generation function
   const generateQRCodeImage = (tableNumber) => {
     // const baseUrl = 'https://dapper-muffin-326944.netlify.app'
-    const baseUrl = 'https://scintillating-pithivier-3fc2d1.netlify.app'
+    // const baseUrl = 'https://scintillating-pithivier-3fc2d1.netlify.app'
+    const baseUrl = 'https://demo-orderflow.onrender.com/api'
     const url = `${baseUrl}/order/${tableNumber}`
     return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}&format=png&margin=10&qzone=1`
   }
@@ -118,7 +119,9 @@ const TableManagement = () => {
     try {
       const printWindow = window.open('', '_blank', 'width=400,height=600')
       // const baseUrl = 'https://dapper-muffin-326944.netlify.app'
-      const baseUrl = 'https://scintillating-pithivier-3fc2d1.netlify.app'
+      // const baseUrl = 'https://scintillating-pithivier-3fc2d1.netlify.app'
+          const baseUrl = 'https://demo-orderflow.onrender.com/api'
+
       printWindow.document.write(`
         <!DOCTYPE html>
         <html>
