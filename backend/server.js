@@ -17,7 +17,9 @@ const server = http.createServer(app);
 // ✅ FIXED: Simplified CORS configuration
 app.use(cors({
   origin: [
-    'soft-tarsier-e7e494.netlify.app',
+    'https://soft-tarsier-e7e494.netlify.app',
+
+    // 'soft-tarsier-e7e494.netlify.app',
     // 'https://scintillating-pithivier-3fc2d1.netlify.app',
     // 'https://dapper-muffin-326944.netlify.app',
     // 'https://orderflow-frontend.onrender.com',
