@@ -10,7 +10,8 @@ import './ReceptionDashboard.css'
 // const API_BASE_URL = 'http://localhost:5000/api'
 
 //const API_BASE_URL = 'https://the-tea-cartel-1.onrender.com/api';
-const API_BASE_URL=  'https://orderflow-backend-u0ch.onrender.com/api';
+// const API_BASE_URL=  'https://orderflow-backend-u0ch.onrender.com/api';
+const API_BASE_URL = 'https://demo-orderflow.onrender.com/api';
 
 const ADMIN_CREDENTIALS = {
   username: import.meta.env.VITE_ADMIN_USERNAME || 'admin',
@@ -135,8 +136,9 @@ const ReceptionDashboard = () => {
 
       // Use wss:// for secure WebSocket on Render
       // const socketUrl = 'wss://orderflow-backend-v964.onrender.com';
-      const socketUrl = 'https://the-tea-cartel-1.onrender.com';
-
+      // const socketUrl = 'https://the-tea-cartel-1.onrender.com';
+      const socketUrl = 'https://demo-orderflow.onrender.com';
+      
       const socket = io(socketUrl, {
         transports: ['websocket', 'polling'],
         reconnection: true,
@@ -1548,7 +1550,7 @@ const printThermalBill = (order) => {
       <body>
         <div class="bill-container">
           <div class="bill-header">
-            <div class="restaurant-name">The Chai Cartel</div>
+            <div class="restaurant-name">Orderflow demo</div>
             <div style="font-size: 9px;">-------------------------------</div>
           </div>
           

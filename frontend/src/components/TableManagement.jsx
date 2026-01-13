@@ -8,7 +8,8 @@ import './TableManagement.css'
 
 // const API_BASE_URL = 'https://orderflow-backend-v964.onrender.com/api'
 // const API_BASE_URL = 'https://the-tea-cartel-1.onrender.com/api';
-const API_BASE_URL=  'https://orderflow-backend-u0ch.onrender.com/api';
+// const API_BASE_URL=  'https://orderflow-backend-u0ch.onrender.com/api';
+const API_BASE_URL = 'https://demo-orderflow.onrender.com/api';
 const TableManagement = () => {
   const [tables, setTables] = useState([])
   const [newTableNumber, setNewTableNumber] = useState('')
@@ -188,7 +189,7 @@ const TableManagement = () => {
         </head>
         <body>
           <div class="print-container">
-            <div class="restaurant-name">THE CHAI CARTEL</div>
+            <div class="restaurant-name">Orderflow-demo</div>
             <div class="table-number">Table ${tableNumber}</div>
             <div class="qr-container">
               <img 

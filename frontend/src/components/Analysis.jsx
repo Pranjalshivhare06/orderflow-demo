@@ -10,7 +10,8 @@ import './Analysis.css';
 // const API_BASE_URL = 'http://localhost:5000/api';
 // const API_BASE_URL = 'https://orderflow-backend-v964.onrender.com/api'
 // const API_BASE_URL = 'https://the-tea-cartel-1.onrender.com/api'
-const API_BASE_URL=  'https://orderflow-backend-u0ch.onrender.com/api';
+// const API_BASE_URL=  'https://orderflow-backend-u0ch.onrender.com/api';
+const API_BASE_URL = 'https://demo-orderflow.onrender.com/api';
 
 const Analysis = () => {
   const [analytics, setAnalytics] = useState({
