@@ -9,7 +9,9 @@ import './ReceptionDashboard.css'
 // const API_BASE_URL = 'https://orderflow-backend-v964.onrender.com/api'
 // const API_BASE_URL = 'http://localhost:5000/api'
 
-const API_BASE_URL = 'https://the-tea-cartel-1.onrender.com/api';
+//const API_BASE_URL = 'https://the-tea-cartel-1.onrender.com/api';
+const API_BASE_URL=  'https://orderflow-backend-u0ch.onrender.com/api';
+
 const ADMIN_CREDENTIALS = {
   username: import.meta.env.VITE_ADMIN_USERNAME || 'admin',
   password: import.meta.env.VITE_ADMIN_PASSWORD || 'admin123'

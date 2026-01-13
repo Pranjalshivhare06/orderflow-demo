@@ -4,7 +4,9 @@ import axios from 'axios';
 import './InventoryManagement.css';
 
 // const API_BASE_URL = 'https://orderflow-backend-v964.onrender.com/api';
-const API_BASE_URL = 'https://the-tea-cartel-1.onrender.com/api';
+// const API_BASE_URL = 'https://the-tea-cartel-1.onrender.com/api';
+const API_BASE_URL=  'https://orderflow-backend-u0ch.onrender.com/api';
+
 const InventoryManagement = () => {
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(false);
